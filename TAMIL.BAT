@@ -1,3 +1,4 @@
-@REM Tamil Theme
-@if exist AB.EXE AB.EXE THEME/TAMIL/TAMIL.INI
-@if not exist AB.EXE echo Can't Run .
+@REM Launch AfterBurn with the TAMIL theme
+@SET APP=%~dp0
+@IF NOT EXIST "%APP%AB.EXE" "%APP%BUILD.BAT"
+@"%APP%AB.EXE" "%APP%THEME/TAMIL/TAMIL.INI"

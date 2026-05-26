@@ -1,265 +1,202 @@
-//Loading and Unloading .
-
 #include "decl.h"
 #include "files.h"
 #include "flog.c"
 #include "fhsc.c"
 #include "fini.c"
 
-#ifdef DUMB
-void destroy_mod(MUSIC *duh)
+void unloadAssets();
+
+void destroyMod(MUSIC* musicHandle)
 {
-unload_duh(duh);
+    unload_duh(musicHandle);
 }
 
-MUSIC* load_mod(char filename[])
+MUSIC* loadMod(char filePath[])
 {
-MUSIC *duh;
-if(!(duh=dumb_load_s3m(filename)))
-  if(!(duh=dumb_load_it(filename)))
-    if(!(duh=dumb_load_xm(filename)))
-	  if(!(duh=dumb_load_mod(filename)))
-	    #ifdef DUMBOGG
-	    if(!(duh=dumb_load_ogg(filename,DUMBOGGLP)))
-        #endif //DUMBOGG
-	     return NULL;
-return duh;
-}
-#endif //DUMB
-
-//Release Stuff.
-void unload()
-{
- sprintf(logmsg,"Unloading : ");logwrite();
- //Scores .
- writehsc();
- //Sounds .
- if(!serr)
- {
-  destroy_sample(won);
-  destroy_sample(scollec);
-  destroy_sample(died);
-  destroy_sample(burst);
-  for(i=0;i<NUMEBULLTYPES;i++)
-  {
-  destroy_sample(eshoot[i]);
-  }
-  for(i=0;i<NUMBULLTYPES;i++)
-  {
-  destroy_sample(shoot[i]);
-  }
-  destroy_mod(mmusic);
-  for(i=0;i<NUMLEVELS;i++)
-  {
-  destroy_mod(music[i]);
-  }
- }
- //Statistics Icons .
- for(i=0;i<NUMICONS;i++)
- {
-  destroy_bitmap(icons[i]);
- }
- //Explosions .
- for(i=0;i<NUMEXPLODE;i++)
- {
-  destroy_bitmap(explodeframe[i]);
- }
- //Enemies .
- for(i=0;i<ENEMYTYPES;i++)
- {
-  for(j=0;j<enemyframes[i];j++)
-  {
-   destroy_bitmap(enemyanims[i][j]);
-  }
- }
- //Other Collectibles .
- for(i=0;i<COLTYPES;i++)
- {
- for(j=0;j<cgframes[i];j++)
- { 
-  destroy_bitmap(colbs[i][j]);
- }
- }
- //Ammo .
- for(i=0;i<NUMBULLTYPES;i++)
- {
- for(j=0;j<caframes[i];j++)
- { 
-  destroy_bitmap(bammobs[i][j]);
- }
- }
- //Enemy Bullets .
- for(i=0;i<NUMEBULLTYPES;i++)
- { 
- for(j=0;j<ebframes[i];j++)
- {
-  destroy_bitmap(ebullbs[i][j]);
- }
- }  
- //Bullets .
- for(i=0;i<NUMBULLTYPES;i++)
- { 
- for(j=0;j<bframes[i];j++)
- {
-  destroy_bitmap(bullbs[i][j]);
- }
- }
- //Ship Blank .
- destroy_bitmap(shipblank);
- //Ship Blink .
- for(i=0;i<SHBLFRAMES;i++)
- {
-  destroy_bitmap(shipbl[i]);
- }
- //Ship .
- for(i=0;i<SHFRAMES;i++)
- {
-  destroy_bitmap(shipbs[i]);
- }
- //Font .
- alfont_destroy_font(alfy);
- //Logo .
- destroy_bitmap(logo);
- //DBuffer .
- destroy_bitmap(dbuffer);
- sprintf(logmsg,"Unloading Done !");logwrite();
+    MUSIC* musicHandle;
+    if ((musicHandle = dumbLoadS3m(filePath))) { return musicHandle; }
+    if ((musicHandle = dumbLoadIt(filePath)))  { return musicHandle; }
+    if ((musicHandle = dumbLoadXm(filePath)))  { return musicHandle; }
+    if ((musicHandle = dumbLoadMod(filePath))) { return musicHandle; }
+    return NULL;
 }
 
-void writestatus(void *val,char *msg)
+void writeStatus(void* pointer, const char* message)
 {
-if(val)
-{
-sprintf(logmsg,"%s : OK",msg);
-logwrite();
-}
-else
-{
-sprintf(logmsg,"Error in processing : %s",msg);
-logwrite();unload();iniclose();logclose();alfont_exit();
-music_exit();allegro_exit();exit(E_ERR);
-}
+    if (pointer) {
+        logWrite("%s: OK", message);
+        return;
+    }
+    logWrite("Error processing: %s", message);
+    unloadAssets();
+    writePreferences();
+    logClose();
+    alfont_exit();
+    musicExit();
+    allegro_exit();
+    exit(RESULT_ERROR);
 }
 
-//Load Stuff.
-void load()
+void unloadAssets()
 {
- int i;
- char fname[STRB];
- sprintf(logmsg,"Loading : ");logwrite();
- //DBuffer .
- dbuffer = create_bitmap(XRES,YRES);writestatus(dbuffer,"Double Buffer");
- //Logo .
- logo = load_bitmap(FLogo,pal);writestatus(logo,FLogo);
- //Font .
- alfy = alfont_load_font(FFont);writestatus(alfy,FFont);
- //Ship .
- for(i=0;i<SHFRAMES;i++)
- {
-  sprintf(fname,FShip,i+1);
-  shipbs[i] = load_bitmap(fname,pal);
-  writestatus(shipbs[i],fname);
- }
- //Ship Blink .
- for(i=0;i<SHBLFRAMES;i++)
- {
-  sprintf(fname,FShipBlink,i+1);
-  shipbl[i] = load_bitmap(fname,pal);
-  writestatus(shipbl[i],fname);
- }
- //Ship Blank .
- shipblank = load_bitmap(FBlank,pal);writestatus(shipblank,FBlank);
- //Bullets .
- for(i=0;i<NUMBULLTYPES;i++)
- {
- for(j=0;j<bframes[i];j++)
- {
-  sprintf(fname,FBullets,i+1,j+1);
-  bullbs[i][j] = load_bitmap(fname,pal);
-  writestatus(bullbs[i][j],fname);
- }
- }
- //Enemy Bullets .
- for(i=0;i<NUMEBULLTYPES;i++)
- { 
- for(j=0;j<ebframes[i];j++)
- {
-  sprintf(fname,FEBullets,i+1,j+1);
-  ebullbs[i][j] = load_bitmap(fname,pal);
-  writestatus(ebullbs[i][j],fname);
- }
- }  
- //Ammo .
- for(i=0;i<NUMBULLTYPES;i++)
- {
- for(j=0;j<caframes[i];j++)
- {
-  sprintf(fname,FCAmmo,i+1,j+1);
-  bammobs[i][j] = load_bitmap(fname,pal);
-  writestatus(bammobs[i][j],fname);
- }
- }
- //Other Collectibles .
- for(i=0;i<COLNUMS;i++)
- {
- for(j=0;j<cgframes[i];j++)
- { 
-  sprintf(fname,FCOthers,i+1,j+1);
-  colbs[i][j] = load_bitmap(fname,pal);
-  writestatus(colbs[i][j],fname);
- }
- }
- //Enemies .
- for(i=0;i<ENEMYTYPES;i++)
- {
-  for(j=0;j<enemyframes[i];j++)
-  {
-   sprintf(fname,FEnemies,i+1,j+1);
-   enemyanims[i][j] = load_bitmap(fname,pal);
-   writestatus(enemyanims[i][j],fname);
-  }
- }
- //Explosions .
- for(i=0;i<NUMEXPLODE;i++)
- {
-  sprintf(fname,FExplosions,i+1);
-  explodeframe[i] = load_bitmap(fname,pal);
-  writestatus(explodeframe[i],fname);
- } 
- //Statistics Icons .
- for(i=0;i<NUMICONS;i++)
- {
-  sprintf(fname,FIcons,i+1);
-  icons[i] = load_bitmap(fname,pal);
-  writestatus(icons[i],fname);
- }
- //Sounds .
- if(!serr)
- {
-  for(i=0;i<NUMLEVELS;i++)
-  {
-  sprintf(fname,FMusic,i+1);
-  music[i]=load_mod(fname);writestatus(music[i],fname);
-  }
-  mmusic=load_mod(FMMusic);writestatus(mmusic,FMMusic);
-  for(i=0;i<NUMBULLTYPES;i++)
-  {
-  sprintf(fname,FShoot,i+1);
-  shoot[i]=load_sample(fname);
-  writestatus(shoot[i],fname);
-  }
-  for(i=0;i<NUMEBULLTYPES;i++)
-  {
-  sprintf(fname,FEShoot,i+1);
-  eshoot[i]=load_sample(fname);
-  writestatus(eshoot[i],fname);
-  }
-  burst=load_sample(FExplodeSound);writestatus(burst,FExplodeSound);
-  died=load_sample(FExplodeDied);writestatus(died,FExplodeDied);
-  scollec=load_sample(FSCollec);writestatus(scollec,FSCollec);
-  won=load_sample(FSWon);writestatus(won,FSWon);
- }
- //Scores .
- initrandhsc();
- readhsc();
- sprintf(logmsg,"Loading Done !");logwrite();
+    int i, j;
+    logWrite("Unloading...");
+
+    writeHighScores();
+
+    if (!soundError) {
+        destroy_sample(wonSample);
+        destroy_sample(collectSample);
+        destroy_sample(playerDieSample);
+        destroy_sample(explodeSample);
+        for (i = 0; i < numEnemyBulletTypes; i++) { destroy_sample(enemyShootSamples[i]); }
+        for (i = 0; i < numBulletTypes; i++)  { destroy_sample(shootSamples[i]); }
+        destroyMod(menuMusic);
+        for (i = 0; i < numLevels; i++) { destroyMod(levelMusic[i]); }
+    }
+
+    for (i = 0; i < NUM_ICONS; i++)   { destroy_bitmap(statIcons[i]); }
+    for (i = 0; i < numExplodeFrames; i++) { destroy_bitmap(explodeFrames[i]); }
+
+    for (i = 0; i < numEnemyTypes; i++) {
+        for (j = 0; j < enemyFrames[i]; j++) { destroy_bitmap(enemyAnimations[i][j]); }
+    }
+    for (i = 0; i < NUM_COLLECTIBLE_TYPES; i++) {
+        for (j = 0; j < collectFrames[i]; j++) { destroy_bitmap(collectBitmaps[i][j]); }
+    }
+    for (i = 0; i < numBulletTypes; i++) {
+        for (j = 0; j < ammoCollectFrames[i]; j++) { destroy_bitmap(ammoCollectBitmaps[i][j]); }
+    }
+    for (i = 0; i < numEnemyBulletTypes; i++) {
+        for (j = 0; j < enemyBulletFrames[i]; j++) { destroy_bitmap(enemyBulletBitmaps[i][j]); }
+    }
+    for (i = 0; i < numBulletTypes; i++) {
+        for (j = 0; j < bulletFrames[i]; j++) { destroy_bitmap(bulletBitmaps[i][j]); }
+    }
+
+    destroy_bitmap(playerBlankBitmap);
+    for (i = 0; i < shipBlinkFrames; i++) { destroy_bitmap(playerBlinkBitmaps[i]); }
+    for (i = 0; i < shipFrames; i++)   { destroy_bitmap(playerShipBitmaps[i]); }
+    alfont_destroy_font(creditsFont);
+    alfont_destroy_font(highScoresValuesFont);
+    alfont_destroy_font(gameFont);
+    destroy_bitmap(logo);
+    destroy_bitmap(virtualBuffer); virtualBuffer = NULL;
+    destroy_bitmap(backBuffer); backBuffer = NULL;
+
+    logWrite("Unloading done.");
+}
+
+void loadAssets()
+{
+    int i, j;
+    char filePath[STRING_BUFFER_SIZE];
+    logWrite("Loading...");
+
+    virtualBuffer = create_bitmap(640, 480);
+    writeStatus(virtualBuffer, "Virtual Canvas");
+    backBuffer = create_bitmap(screenWidth, screenHeight);
+    writeStatus(backBuffer, "Back Buffer");
+
+    logo = loadBitmap(logoPath, palette);
+    writeStatus(logo, logoPath);
+    gameFont = loadFont(fontPath);
+    writeStatus(gameFont, fontPath);
+    creditsFont = loadFont("DATA\\GLOBAL\\FONT.TTF");
+    writeStatus(creditsFont, "Credits Font");
+    alfont_set_font_size(creditsFont, FONT_SIZE);
+    highScoresValuesFont = loadFont("DATA\\GLOBAL\\FONT.TTF");
+    writeStatus(highScoresValuesFont, "High Score Values Font");
+    alfont_set_font_size(highScoresValuesFont, FONT_SIZE);
+
+    for (i = 0; i < shipFrames; i++) {
+        sprintf(filePath, shipPath, i + 1);
+        playerShipBitmaps[i] = loadBitmap(filePath, palette);
+        writeStatus(playerShipBitmaps[i], filePath);
+    }
+    for (i = 0; i < shipBlinkFrames; i++) {
+        sprintf(filePath, shipBlinkPath, i + 1);
+        playerBlinkBitmaps[i] = loadBitmap(filePath, palette);
+        writeStatus(playerBlinkBitmaps[i], filePath);
+    }
+    playerBlankBitmap = loadBitmap(shipBlankPath, palette);
+    writeStatus(playerBlankBitmap, shipBlankPath);
+
+    for (i = 0; i < numBulletTypes; i++) {
+        for (j = 0; j < bulletFrames[i]; j++) {
+            sprintf(filePath, bulletPath, i + 1, j + 1);
+            bulletBitmaps[i][j] = loadBitmap(filePath, palette);
+            writeStatus(bulletBitmaps[i][j], filePath);
+        }
+    }
+    for (i = 0; i < numEnemyBulletTypes; i++) {
+        for (j = 0; j < enemyBulletFrames[i]; j++) {
+            sprintf(filePath, enemyBulletPath, i + 1, j + 1);
+            enemyBulletBitmaps[i][j] = loadBitmap(filePath, palette);
+            writeStatus(enemyBulletBitmaps[i][j], filePath);
+        }
+    }
+    for (i = 0; i < numBulletTypes; i++) {
+        for (j = 0; j < ammoCollectFrames[i]; j++) {
+            sprintf(filePath, ammoPath, i + 1, j + 1);
+            ammoCollectBitmaps[i][j] = loadBitmap(filePath, palette);
+            writeStatus(ammoCollectBitmaps[i][j], filePath);
+        }
+    }
+    for (i = 0; i < numCollectibles; i++) {
+        for (j = 0; j < collectFrames[i]; j++) {
+            sprintf(filePath, collectiblePath, i + 1, j + 1);
+            collectBitmaps[i][j] = loadBitmap(filePath, palette);
+            writeStatus(collectBitmaps[i][j], filePath);
+        }
+    }
+    for (i = 0; i < numEnemyTypes; i++) {
+        for (j = 0; j < enemyFrames[i]; j++) {
+            sprintf(filePath, enemyPath, i + 1, j + 1);
+            enemyAnimations[i][j] = loadBitmap(filePath, palette);
+            writeStatus(enemyAnimations[i][j], filePath);
+        }
+    }
+    for (i = 0; i < numExplodeFrames; i++) {
+        sprintf(filePath, explosionPath, i + 1);
+        explodeFrames[i] = loadBitmap(filePath, palette);
+        writeStatus(explodeFrames[i], filePath);
+    }
+    for (i = 0; i < NUM_ICONS; i++) {
+        sprintf(filePath, statIconPath, i + 1);
+        statIcons[i] = loadBitmap(filePath, palette);
+        writeStatus(statIcons[i], filePath);
+    }
+
+    if (!soundError) {
+        for (i = 0; i < numLevels; i++) {
+            sprintf(filePath, levelMusicPath, i + 1);
+            levelMusic[i] = loadMod(filePath);
+            writeStatus(levelMusic[i], filePath);
+        }
+        menuMusic = loadMod(menuMusicPath);
+        writeStatus(menuMusic, menuMusicPath);
+        for (i = 0; i < numBulletTypes; i++) {
+            sprintf(filePath, shootSoundPath, i + 1);
+            shootSamples[i] = loadSample(filePath);
+            writeStatus(shootSamples[i], filePath);
+        }
+        for (i = 0; i < numEnemyBulletTypes; i++) {
+            sprintf(filePath, enemyShootSoundPath, i + 1);
+            enemyShootSamples[i] = loadSample(filePath);
+            writeStatus(enemyShootSamples[i], filePath);
+        }
+        explodeSample = loadSample(explodeSoundPath);
+        writeStatus(explodeSample, explodeSoundPath);
+        playerDieSample = loadSample(playerDieSoundPath);
+        writeStatus(playerDieSample, playerDieSoundPath);
+        collectSample = loadSample(collectSoundPath);
+        writeStatus(collectSample, collectSoundPath);
+        wonSample = loadSample(winSoundPath);
+        writeStatus(wonSample, winSoundPath);
+    }
+
+    initRandomHighScores();
+    readHighScores();
+    logWrite("Loading done.");
 }

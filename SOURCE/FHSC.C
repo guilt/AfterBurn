@@ -1,243 +1,159 @@
-//High Scores Algos
-
 #ifndef _M_FHSC_
 #define _M_FHSC_
 
+#include <stdarg.h>
 #include "decl.h"
 #include "pal.c"
+#include "files.h"
 
-void hscwrite()
+void hscWrite(const char* format, ...)
 {
-if(hscfp){fprintf(hscfp,"%s\n",hscmsg);}
+    if (!hscFile) { return; }
+    va_list args;
+    va_start(args, format);
+    vfprintf(hscFile, format, args);
+    va_end(args);
+    fputc('\n', hscFile);
 }
 
-//Needed for Fixing Stuff .
-void initrandhsc()
+void initRandomHighScores()
 {
-if(NUMHSC<=0)return;
-setrand();
-for(i=0;i<NUMHSC;i++)
-{
- Players[i].win=(rand()%2);
- Players[i].level=(NUMLEVELS-1);
- if(!Players[i].win)
- {
- Players[i].level=(rand()%NUMLEVELS);
- }
- Players[i].lives=(rand()%MAXPOSLIVES);
- Players[i].score=(rand()%LIFEGIVINGSCORE);Players[i].score/=GENMULT;Players[i].score*=GENMULT;
- Players[i].life=((rand()%MAXLIFE)+1);
-}
-}
-
-//Bubble-Sorting Loop : Done ,Thanks to Nikhil .
-void dosorthsc()
-{
-int i,j;
-if(NUMHSC<=0)return;
-for(i=0;i<NUMHSC-1;i++)
- for(j=i+1;j<NUMHSC;j++)
-  if
-  (
-
-  (Players[i].win<Players[j].win)
-
-  ||
-  
-  (
-  Players[i].win==Players[j].win&&
-  Players[i].level<Players[j].level
-  )
-
-  ||
-
-  (
-  Players[i].win==Players[j].win&&
-  Players[i].level==Players[j].level&&
-  Players[i].lives<Players[j].lives
-  )
-
-  ||
-
-  (
-  Players[i].win==Players[j].win&&
-  Players[i].level==Players[j].level&&
-  Players[i].lives==Players[j].lives&&
-  Players[i].score<Players[j].score
-  )
-
-  ||
-
-  (
-  Players[i].win==Players[j].win&&
-  Players[i].level==Players[j].level&&
-  Players[i].lives==Players[j].lives&&
-  Players[i].score==Players[j].score&&
-  Players[i].life<Players[j].life
-  )
-
-  ||
-
-  (
-  Players[i].win==Players[j].win&&
-  Players[i].level==Players[j].level&&
-  Players[i].lives==Players[j].lives&&
-  Players[i].score==Players[j].score&&
-  Players[i].life<Players[j].life
-  )
-
-  ||
-
-  (
-  Players[i].win==Players[j].win&&
-  Players[i].level==Players[j].level&&
-  Players[i].lives==Players[j].lives&&
-  Players[i].score==Players[j].score&&
-  Players[i].life==Players[j].life&&
-  strcmp(Players[i].name,Players[j].name)>0
-  )
-
-  )
-
-  {
-  temp=Players[i];
-  Players[i]=Players[j];
-  Players[j]=temp;
-  }
+    if (numHighScores <= 0) { return; }
+    int i;
+    seedRandom();
+    for (i = 0; i < numHighScores; i++) {
+        Players[i].win = (rand() % 2);
+        Players[i].level = (numLevels - 1);
+        if (!Players[i].win) {
+            Players[i].level = (rand() % numLevels);
+        }
+        Players[i].lives = (rand() % maxPossibleLives);
+        Players[i].score = (rand() % LIFE_GIVING_SCORE);
+        Players[i].score /= SCORE_MULTIPLIER;
+        Players[i].score *= SCORE_MULTIPLIER;
+        Players[i].life = ((rand() % maxHealth) + 1);
+    }
 }
 
-void readhsc()
+// Returns negative, 0, positive based on (win, level, lives, score, life, name) tuple ordering.
+// Higher rank = better. So a > b means a should sort first.
+static int comparePlayerRank(const struct Player* playerA, const struct Player* playerB)
 {
- int i=0;
- hscfp = fopen(FHsc,"r");
- if(!hscfp)
- {
-  sprintf(logmsg,"Couldn't Read Scores file : %s",FHsc);logwrite();
-  hscnwrite=1;return;
- }
-sprintf(logmsg,"Reading Scores file : %s",FHsc);logwrite();
-fscanf(hscfp," %d",&NUMHSC);
-if(NUMHSC<0){NUMHSC=0;}if(NUMHSC>MAXHSC){NUMHSC=MAXHSC;}
-for(;i<NUMHSC;i++)
- {
-  fscanf(hscfp,"%s",Players[i].name);ThillaLangadi(Players[i].name,ASPC,SPC);
-  fscanf(hscfp," %d %d %d %d %d",&Players[i].win,&Players[i].level,&Players[i].lives,
-  &Players[i].score,&Players[i].life);
-  Players[i].name[NAMELEN]=0;
- }
- fclose(hscfp);
-sprintf(logmsg,"Read Scores file : %s",FHsc);logwrite();
-dosorthsc();
+    if (playerA->win   != playerB->win)   { return (playerA->win   > playerB->win)   ? 1 : -1; }
+    if (playerA->level != playerB->level) { return (playerA->level > playerB->level) ? 1 : -1; }
+    if (playerA->lives != playerB->lives) { return (playerA->lives > playerB->lives) ? 1 : -1; }
+    if (playerA->score != playerB->score) { return (playerA->score > playerB->score) ? 1 : -1; }
+    if (playerA->life  != playerB->life)  { return (playerA->life  > playerB->life)  ? 1 : -1; }
+    if (!playerA->name[0]) return -1;
+    if (!playerB->name[0]) return 1;
+    return -strcmp(playerA->name, playerB->name);
 }
 
-int determine(unsigned int level,unsigned int lives,unsigned int score,unsigned int life)
+void sortHighScores()
 {
-int i,flag=0;
-if(NUMHSC<=0){NUMHSC=0;flag=1;}
-if(NUMHSC<MAXHSC){flag=1;}
-for(i=0;i<NUMHSC;i++)
-{
-  if
-  (
-
-  (Players[i].win<win)
-  
-  ||
-  
-  (
-  Players[i].win==win&&
-  Players[i].level<level
-  )
-
-  ||
-
-  (
-  Players[i].win==win&&
-  Players[i].level==level&&
-  Players[i].lives<lives
-  )
-
-  ||
-
-  (
-  Players[i].win==win&&
-  Players[i].level==level&&
-  Players[i].lives==lives&&
-  Players[i].score<score
-  )
-
-  ||
-
-  (
-  Players[i].win==win&&
-  Players[i].level==level&&
-  Players[i].lives==lives&&
-  Players[i].score==score&&
-  Players[i].life<=life
-  )
-
-  )
-
-  {
-   flag=1;break;
-  }
-
-}
-if(!scored){flag=0;}
-return flag;
+    int i, j;
+    if (numHighScores <= 0) { return; }
+    for (i = 0; i < numHighScores - 1; i++) {
+        for (j = i + 1; j < numHighScores; j++) {
+            if (comparePlayerRank(&Players[i], &Players[j]) < 0) {
+                tempPlayer = Players[i];
+                Players[i] = Players[j];
+                Players[j] = tempPlayer;
+            }
+        }
+    }
 }
 
-void addscore(char name[])
+void readHighScores()
 {
-if(NUMHSC<0)return;
-if(NUMHSC<=MAXHSC)
-{
-name[NAMELEN]=0;
-strcpy(Players[NUMHSC].name,name);
-Players[NUMHSC].win=win;
-Players[NUMHSC].level=level;
-Players[NUMHSC].lives=lives;
-Players[NUMHSC].score=score;
-Players[NUMHSC].life=0;
-if(active>0)
-Players[NUMHSC].life=active;
-NUMHSC++;hscnwrite=1;
-}
-dosorthsc();
-if(NUMHSC>MAXHSC)
-{
-NUMHSC=MAXHSC; //Truncated !
-}
+    int i;
+    hscFile = fileOpen(getUserDataPath("DEFAULT.HSC"), "r");
+    if (!hscFile) {
+        hscFile = fileOpen(getAppDataPath("DATA\\GLOBAL\\HSCORES.TXT"), "r");
+        if (!hscFile) {
+            logWrite("Couldn't read scores file: %s", getAppDataPath("DATA\\GLOBAL\\HSCORES.TXT"));
+            hscWriteNeeded = 1;
+            return;
+        }
+        logWrite("Reading theme scores file: %s", getAppDataPath("DATA\\GLOBAL\\HSCORES.TXT"));
+    } else {
+        logWrite("Reading user scores file: %s", getUserDataPath("DEFAULT.HSC"));
+    }
+    fscanf(hscFile, " %d", &numHighScores);
+    if (numHighScores < 0) { numHighScores = 0; }
+    if (numHighScores > MAX_HIGH_SCORES) { numHighScores = MAX_HIGH_SCORES; }
+    for (i = 0; i < numHighScores; i++) {
+        fscanf(hscFile, "%s", Players[i].name);
+        replaceChar(Players[i].name, ARROW_SEPARATOR, SPACE_CHAR);
+        fscanf(hscFile, " %d %d %d %d %d",
+               &Players[i].win, &Players[i].level, &Players[i].lives,
+               &Players[i].score, &Players[i].life);
+        Players[i].name[NAMELEN] = 0;
+    }
+    fclose(hscFile);
+    logWrite("Read scores file done");
+    sortHighScores();
 }
 
-void writehsc()
+int isHighScore(unsigned int level, unsigned int lives, unsigned int score, unsigned int life)
 {
- int i=0;
- if(!hscnwrite||!NUMHSC)
- {
-  sprintf(logmsg,"Needn't Write Scores file : %s",FHsc);logwrite();
-  return;
-  }
- hscfp = fopen(FHsc,"w");
- if(!hscfp)
- {
-  sprintf(logmsg,"Couldn't Write Scores file : %s",FHsc);logwrite();
-  return;
- }
- sprintf(logmsg,"Writing Scores file : %s",FHsc);logwrite();
- sprintf(hscmsg,"%d",NUMHSC);hscwrite();
- for(;i<NUMHSC;i++)
- {
- Players[i].name[NAMELEN]=0;
- ThillaLangadi(Players[i].name,SPC,ASPC);
- sprintf(hscmsg,"%s %d %d %d %d %d",Players[i].name,Players[i].win,
- Players[i].level,Players[i].lives,
- Players[i].score,Players[i].life);
- hscwrite();
- }
- sprintf(logmsg,"Wrote Scores file : %s",FHsc);logwrite();
- fclose(hscfp);
+    int i;
+    if (!hasScored) { return 0; }
+    if (numHighScores < 0) { numHighScores = 0; }
+    struct Player candidate;
+    candidate.win = gs.win;
+    candidate.level = gs.level;
+    candidate.lives = gs.lives;
+    candidate.score = gs.score;
+    candidate.life = life;
+    candidate.name[0] = 0;
+    for (i = 0; i < numHighScores; i++) {
+        if (comparePlayerRank(&candidate, &Players[i]) > 0) { return 1; }
+    }
+    return numHighScores < MAX_HIGH_SCORES;
+}
+
+void addHighScore(char name[])
+{
+    if (numHighScores < 0) { return; }
+    if (numHighScores <= MAX_HIGH_SCORES) {
+        name[NAMELEN] = 0;
+        strcpy(Players[numHighScores].name, name);
+        Players[numHighScores].win = gs.win;
+        Players[numHighScores].level = gs.level;
+        Players[numHighScores].lives = gs.lives;
+        Players[numHighScores].score = gs.score;
+        Players[numHighScores].life = (playerHealth > 0) ? playerHealth : 0;
+        numHighScores++;
+        hscWriteNeeded = 1;
+    }
+    sortHighScores();
+    if (numHighScores > MAX_HIGH_SCORES) { numHighScores = MAX_HIGH_SCORES; }
+}
+
+void writeHighScores()
+{
+    int i;
+    if (!hscWriteNeeded || !numHighScores) {
+        logWrite("Needn't write scores file: %s", getUserDataPath("DEFAULT.HSC"));
+        return;
+    }
+    hscFile = fileOpen(getUserDataPath("DEFAULT.HSC"), "w");
+    if (!hscFile) {
+        logWrite("Couldn't write scores file: %s", getUserDataPath("DEFAULT.HSC"));
+        return;
+    }
+    logWrite("Writing scores file: %s", getUserDataPath("DEFAULT.HSC"));
+    hscWrite("%d", numHighScores);
+    for (i = 0; i < numHighScores; i++) {
+        Players[i].name[NAMELEN] = 0;
+        replaceChar(Players[i].name, SPACE_CHAR, ARROW_SEPARATOR);
+        hscWrite("%s %d %d %d %d %d",
+                 Players[i].name, Players[i].win, Players[i].level,
+                 Players[i].lives, Players[i].score, Players[i].life);
+    }
+    logWrite("Wrote scores file: %s", getUserDataPath("DEFAULT.HSC"));
+    fclose(hscFile);
 }
 
 #endif //_M_FHSC_
-

@@ -18,128 +18,130 @@
 #include "credits.c"
 #include "vid.c"
 
-void initetable()
+void initEnemyTable()
 {
-int i;
-sintable[0]=0;costable[0]=1;
-for(i=1;i<ETABNUM;i++)
-{
- sintable[i] = sin((i*PI*2)/ETABNUM);
- costable[i] = cos((i*PI*2)/ETABNUM);
-}
-for(i=(ETABNUM-1);i>0;i--)
-{
- sintable[i] -= sintable[i-1]; //Relativise ....
- costable[i] -= costable[i-1];
-}
-}
-
-void onetimegameinit()
-{
-score=0;
-scored=0;
-level=0;
-win=0;
-gm=1;
-lives=MAXLIVES;
-onetimebullinit();
-playmusic();
+    int i;
+    int lastSin, lastCos;
+    sinTable[0] = 0;
+    cosTable[0] = SIN_SCALE;
+    for (i = 1; i < SIN_TABLE_SIZE; i++) {
+        sinTable[i] = (int)(sin((i * PI * 2) / SIN_TABLE_SIZE) * SIN_SCALE);
+        cosTable[i] = (int)(cos((i * PI * 2) / SIN_TABLE_SIZE) * SIN_SCALE);
+    }
+    lastSin = sinTable[SIN_TABLE_SIZE - 1];
+    lastCos = cosTable[SIN_TABLE_SIZE - 1];
+    for (i = (SIN_TABLE_SIZE - 1); i > 0; i--) {
+        sinTable[i] -= sinTable[i - 1];
+        cosTable[i] -= cosTable[i - 1];
+    }
+    /* close the cycle: the telescoping sum of all entries equals the last
+       original value; subtract it so a full lap through the table sums to 0 */
+    sinTable[SIN_TABLE_SIZE - 1] -= lastSin;
+    cosTable[SIN_TABLE_SIZE - 1] -= lastCos;
 }
 
-void gameinit()
+void oneTimeGameInit()
 {
-gen=1,active=MAXLIFE,
-shipy=YRES/2,shipx=0,shipframe=0,shipblframe=0,serr=0,done=0,blaf=0,kills=0;
-for(i=0;i<MAXCOLLEC;i++){colls[i].active=0;}
-clear_keybuf();
-bullinit();
-ebullinit();
-enemyinit();
-genenemies();
+    gs.score = 0;
+    hasScored = 0;
+    gs.level = 0;
+    gs.win = 0;
+    gs.isInGame = 1;
+    gs.lives = maxLives;
+    oneTimeBulletInit();
+    playMusic();
 }
 
-void chknew()
+void initGame()
 {
- if(done==2||win==1)done=1;
- if(!active&&lives){restartmsg();gameinit();}
+    gs.frameCount = 1;
+    playerHealth = maxHealth;
+    playerY = SCREEN_HEIGHT / 2;
+    playerX = 0;
+    playerFrame = 0;
+    playerBlinkFrame = 0;
+    soundError = 0;
+    gs.isDone = 0;
+    isBlinking = 0;
+    gs.enemiesKilled = 0;
+    memset(colls, 0, sizeof(colls));
+    clearKeys();
+    initBullets();
+    initEnemyBullets();
+    initEnemies();
+    generateEnemies();
 }
 
-void chklevel()
+void checkNewGameState()
 {
- if(kills>rkills[level])
- {
- if(levincrement())
- {
- kills=0;
- gameinit();
- playmusic();
- }
- }
+    if (!playerHealth && gs.lives) {
+        setGameState(STATE_RESTART);
+        return;
+    }
+    if (gs.isDone) { setGameState(STATE_GAME_OVER); }
 }
 
-void update()
+void checkLevelProgress()
 {
-if(!done)
-{
-  updatestarfield();
-  updatebullets();
-  updateenemies();
-  updateebullets();
-  updatecollec();
-  updatebulletsandenemies();
-  UpdateHero();
-  updateebulletsandhero();
-}
+    if (gs.enemiesKilled > killsToAdvanceLevel[gs.level]) {
+        setGameState(STATE_LEVEL_CLEAR);
+    }
 }
 
-void draw()
+void updateGameState()
 {
-  cls();
-  drawstarfield();
-  drawbullets();
-  drawenemies();
-  drawebullets();
-  drawhero();
-  drawcollec();
-  drawstat();
-  render();
+    if (gs.state == STATE_PLAYING) {
+        updateStarfield();
+        updateBullets();
+        updateEnemies();
+        updateEnemyBullets();
+        updateCollectibles();
+        updateBulletsAndEnemies();
+        updatePlayer();
+        updateEnemyBulletsAndPlayer();
+    }
 }
 
-//Timing .
-void updategen()
+void drawGame()
 {
-gen++;
+    clearScreen();
+    drawStarfield();
+    drawBullets();
+    drawEnemies();
+    drawEnemyBullets();
+    drawPlayer();
+    drawCollectibles();
+    drawStatusBar();
 }
 
-void reupdate()
+void updateFrameCount()
 {
-  updeclife();
-  chknew();
-  chklevel();
-  updategen();
-  evhandle();
+    gs.frameCount++;
 }
 
-//Game Loop.
-void gloop()
+void playingUpdate()
 {
- onetimegameinit();
- gameinit();
- while(done!=1)
- { 
-  update();
-  draw();
-  reupdate();
-  }
- gameover();
- enterhsc();
+    updateGameState();
+    updateDecliningLife();
+    checkNewGameState();
+    if (gs.state != STATE_PLAYING) return;
+    checkLevelProgress();
+    if (gs.state != STATE_PLAYING) return;
+    updateFrameCount();
+    checkIfDead();
 }
 
-//Hopefully Works .
-int errhandler(const char msg[])
+int errorHandler(const char msg[])
 {
-sprintf(logmsg,"%s",msg);
-logwrite();unload();iniclose();
-sprintf(logmsg,"Quitting Prematurely ....");logwrite();
-logclose();alfont_exit();music_exit();allegro_exit();return E_ERR;
+    logWrite("%s", msg);
+    unloadAssets();
+    writePreferences();
+    logWrite("Quitting prematurely.");
+    logClose();
+    alfont_exit();
+    musicExit();
+    allegro_exit();
+    return RESULT_ERROR;
 }
+
+

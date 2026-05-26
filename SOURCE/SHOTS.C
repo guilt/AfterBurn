@@ -7,27 +7,23 @@
 #include "files.h"
 #include "flog.c"
 
-void doshot()
+void takeScreenshot()
 {
-int k=0,sdone=0;
-char fname[STRB];
-for(;!sdone;k++)
-{
-sprintf(fname,FShot,k+1);
-if(!fexist(fname))
-{
-if(!save_bitmap(fname,dbuffer,pal))
-{sdone=1;sprintf(logmsg,"Screenshot written to : %s",fname);ininwrite=1;logwrite();} //Ok ,Done !
-}
-}
-}
-
-void doshandle()
-{
-if(key[KEY_PRTSCR]){rest(SDT);} //This may prevent guys from Print-Screening over time ....
-else if(key[KEY_F12]){doshot();}
-else{return;}
-clear_keybuf();
+    int screenshotCount = 0, screenshotDone = 0;
+    char fileName[STRING_BUFFER_SIZE];
+    for (; !screenshotDone; screenshotCount++)
+    {
+        sprintf(fileName, screenshotPath, screenshotCount + 1);
+        if (!fileExists(fileName))
+        {
+            if (!saveBitmap(fileName, drawingBuffer, palette))
+            {
+                screenshotDone = 1;
+                logWrite("Screenshot written to: %s", fileName);
+            }
+        }
+    }
 }
 
 #endif //_M_SHOTS_
+

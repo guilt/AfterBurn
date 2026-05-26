@@ -6,106 +6,93 @@
 #include "decl.h"
 #include "fhsc.c"
 
-//High Scores Loop .
-void hscloop()
+static int entryLen;
+static char entryKeyChar, entryName[NAMELEN + 1];
+
+void highScoresInput()
 {
- int u;
- if(NUMHSC<=0){return;}
- dosorthsc();
- clear_keybuf();
- while(1)
- {
-  cls();
-  updatestarfield();
-  drawstarfield();
-  masked_blit(logo,dbuffer,0,0,getmidx()-(logo->w/2),logo->h/4,logo->w,logo->h);
-  sprintf(buff,"%s",menu[HSCMNO]); //As of Now .
-  alfont_textout_centre_aa(dbuffer,alfy,buff,getmidx(),YMENUOFFSET-(FSIZE+VERTSPC),
-  activecol);
-  sprintf(buff,HSCSTRNAME);
-  alfont_textout_aa(dbuffer,alfy,buff,HSCNX,YMENUOFFSET,activecol);
-  sprintf(buff,HSCSTRLEVEL);
-  alfont_textout_centre_aa(dbuffer,alfy,buff,HSCLX,YMENUOFFSET,activecol);
-  sprintf(buff,HSCSTRSCORE);
-  alfont_textout_aa(dbuffer,alfy,buff,HSCSX,YMENUOFFSET,activecol);
-  for(u=NUMHSC-1;u>=0;u--)
-  {
-  sprintf(buff,"%s",Players[u].name);
-  alfont_textout_aa(dbuffer,alfy,buff,HSCNX,YMENUOFFSET+((u+1)*(FSIZE+VERTSPC)),passivecol);
-  sprintf(buff,"%u",Players[u].level);
-  alfont_textout_aa(dbuffer,alfy,buff,HSCLX,YMENUOFFSET+((u+1)*(FSIZE+VERTSPC)),passivecol);
-  sprintf(buff,SCOFORMAT,Players[u].score);
-  alfont_textout_aa(dbuffer,alfy,buff,HSCSX,YMENUOFFSET+((u+1)*(FSIZE+VERTSPC)),passivecol);
-  //As of Now .
-  }
-  if(keypressed())
-  {
-  doshandle();
-  evshandle();
-  if(key[KEY_ESC]){break;}
-  }
-  render();
-  }
-  clear_keybuf();
+    if (gs.ticks == 0) {
+        if (numHighScores <= 0) { setGameState(STATE_MAIN_MENU); return; }
+        sortHighScores();
+        clearKeys();
+    }
+    if (EDGE(KEY_ESC)) { setGameState(STATE_MAIN_MENU); return; }
 }
 
-//Enter HighScores here :
-void enterhsc()
+void highScoresRender()
 {
- char name[NAMELEN+1]={""},c=0,done=0;
- int i,len=0;
- rest(GST);
- if(!determine(level,lives,score,active))return;
- strcpy(buff,STRNNONE); //Initialize .
- strcpy(name,STRNNONE);
- for(;buff[len];len++);
- while(1)
- {
-  cls();
-  updatestarfield();
-  drawstarfield();
-  masked_blit(logo,dbuffer,0,0,getmidx()-(logo->w/2),logo->h/4,logo->w,logo->h);
-  sprintf(buff,STRCHSCNAME);
-  alfont_textout_centre_aa(dbuffer,alfy,buff,getmidx(),YMENUOFFSET-(FSIZE+VERTSPC),
-  activecol);
-  for(i=0;i<len;i++)
-  {
-  buff[i]=name[i];
-  }
-  buff[i]=0;
-  alfont_textout_centre_aa(dbuffer,alfy,buff,getmidx(),YMENUOFFSET,passivecol);
-  //As of Now .
-  if(keypressed())
-  {
-  doshandle(); //Allow only Shots .
-  if(done&&c==END)
-  {
-  break;
-  }
-  if(done&&!*name)
-  {
-  break;
-  }
-  c=END;c=strgetch();
-  if(!done&&c==END)
-  {
-  name[len]=name[NAMELEN]=0;done=1;
-  }
-  else if(!done&&c==BSP) {if(len>0)len--;}
-  else if(!done&&len<NAMELEN)
-  {
-  if(c!=END&&c!=BSP)
-  name[len++]=c;
-  }
-  clear_keybuf();
-  }
-  render();
-  }
-  clear_keybuf();
-  if(!*name){strcpy(name,STRNNONE);}
-  addscore(name);
-  hscloop();
+    int i;
+    clearScreen();
+    updateStarfield();
+    drawStarfield();
+    drawSprite(logo, getMidX() - (logo->w / 2), logo->h / 4);
+    drawCenteredText(MENU_Y_OFFSET - (FONT_SIZE + VERTICAL_SPACING), activeColor, "%s", menu[HIGH_SCORES_MENU_ITEM]);
+    drawText(HIGH_SCORES_NAME_X, MENU_Y_OFFSET, activeColor, "%s", hsNameStr);
+    drawTextCenteredAt(HIGH_SCORES_LEVEL_X, MENU_Y_OFFSET, activeColor, "%s", hsLevelStr);
+    drawText(HIGH_SCORES_SCORE_X, MENU_Y_OFFSET, activeColor, "%s", hsScoreStr);
+    alfont_set_font_size(highScoresValuesFont, FONT_SIZE);
+    int yStep = FONT_SIZE + 4;
+    for (i = numHighScores - 1; i >= 0; i--) {
+        alfont_textout_aa(drawingBuffer, highScoresValuesFont, Players[i].name, HIGH_SCORES_NAME_X, MENU_Y_OFFSET + ((i + 1) * yStep), passiveColor);
+        sprintf(textBuffer, "%u", Players[i].level);
+        alfont_textout_centre_aa(drawingBuffer, highScoresValuesFont, textBuffer, HIGH_SCORES_LEVEL_X, MENU_Y_OFFSET + ((i + 1) * yStep), passiveColor);
+        sprintf(textBuffer, scoreFormat, Players[i].score);
+        alfont_textout_aa(drawingBuffer, highScoresValuesFont, textBuffer, HIGH_SCORES_SCORE_X, MENU_Y_OFFSET + ((i + 1) * yStep), passiveColor);
+    }
+}
+
+void highScoreEntryUpdate()
+{
+    if (gs.ticks == 1) {
+        if (!isHighScore(gs.level, gs.lives, gs.score, playerHealth)) { setGameState(STATE_MAIN_MENU); return; }
+        {
+            const char* user = getUserName();
+            int k; for (k = 0; k < NAMELEN && user[k]; k++) { entryName[k] = user[k]; }
+            entryName[k] = 0; entryLen = k;
+        }
+        clearKeys();
+    }
+    gs.frameCount++;
+}
+
+void highScoreEntryInput()
+{
+    if (!isKeyPressed()) return;
+    entryKeyChar = readKeyChar();
+    if (entryKeyChar == NEWLINE_CHAR) {
+        entryName[entryLen] = 0;
+        if (!*entryName) { strcpy(entryName, anonymousStr); }
+        addHighScore(entryName);
+        setGameState(STATE_HIGH_SCORES);
+        return;
+    }
+    if (entryKeyChar == BACKSPACE_CHAR) {
+        if (entryLen > 0) { entryLen--; entryName[entryLen] = 0; }
+    } else if (entryLen < NAMELEN) {
+        entryName[entryLen++] = entryKeyChar;
+        entryName[entryLen] = 0;
+    }
+    clearKeys();
+}
+
+void highScoreEntryRender()
+{
+    clearScreen();
+    updateStarfield();
+    drawStarfield();
+    drawSprite(logo, getMidX() - (logo->w / 2), logo->h / 4);
+    drawCenteredText(MENU_Y_OFFSET - (FONT_SIZE + VERTICAL_SPACING), activeColor, "%s", hsPromptStr);
+    {
+        int i, txtW;
+        for (i = 0; i < entryLen; i++) { textBuffer[i] = entryName[i]; }
+        textBuffer[i] = 0;
+        alfont_set_font_size(highScoresValuesFont, FONT_SIZE);
+        alfont_textout_centre_aa(drawingBuffer, highScoresValuesFont, textBuffer, getMidX(), MENU_Y_OFFSET, passiveColor);
+        txtW = alfont_text_length(highScoresValuesFont, textBuffer);
+        if ((gs.frameCount / 15) % 2) {
+            alfont_textout_aa(drawingBuffer, highScoresValuesFont, "_", getMidX() + txtW / 2 + 1, MENU_Y_OFFSET, activeColor);
+        }
+    }
 }
 
 #endif //_M_HSC_
-

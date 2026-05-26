@@ -1,3 +1,3 @@
-Default Theme .
+Default Theme.
 
-Created by Nikhil .
+Created by Nikhil Karnad.

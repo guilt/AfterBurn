@@ -1,5 +1,3 @@
-//Collectibles .
-
 #ifndef _M_COLLEC_
 #define _M_COLLEC_
 
@@ -8,99 +6,94 @@
 #include "collisio.c"
 #include "score.c"
 
-void gencollec(int x,int y)
+void placeCollectible(int x, int y)
 {
-int i,j,done=0;
-setrand(); //Generate Items at Random !
-for(i=0;i<MAXCOLLEC&&!done;i++)
-{
-if(!colls[i].active)
-{
-colls[i].x=x,colls[i].y=y;
-colls[i].type=(rand()%COLTYPES);
-if(colls[i].type==CA) //Ammo
-{
-colls[i].spec=(rand()%NUMBULLTYPES);
-colls[i].active=calife[colls[i].spec];
-colls[i].cbs=bammobs[colls[i].spec]
-[((gen%(caframes[colls[i].spec]*cafmul[colls[i].spec]))/cafmul[colls[i].spec])];
-}
-else if(colls[i].type==CO) //Others
-{
-colls[i].spec=(rand()%COLNUMS);
-colls[i].active=cclife[colls[i].spec];
-colls[i].cbs=colbs[colls[i].spec]
-[((gen%(cgframes[colls[i].spec]*cgfmul[colls[i].spec]))/cgfmul[colls[i].spec])];
-}
-done=1;
-for(j=0;j<MAXCOLLEC;j++)
-{
-if(j!=i&&colls[j].active&&collide(colls[i].x,colls[i].y,CWIDTH(i),CHEIGHT(i),colls[j].x,colls[j].y,CWIDTH(j),CHEIGHT(j)))
-{
-colls[i].active=0; //Deactivate for two collectibles on same spot .
-done=0;
-}
-}
-if(collide(colls[i].x,colls[i].y,CWIDTH(i),CHEIGHT(i),shipx,shipy,HWIDTH,HHEIGHT))
-{
-colls[i].active=0; //Deactivate for collectible and hero on same spot .
-done=0;
-}
-}
-}
+    int i, j, placed = 0;
+    seedRandom();
+    for (i = 0; i < MAX_COLLECTIBLES && !placed; i++) {
+        if (colls[i].active) { continue; }
+
+        colls[i].x = x;
+        colls[i].y = y;
+        colls[i].type = (rand() % NUM_COLLECTIBLE_TYPES);
+
+        if (colls[i].type == COLLECTIBLE_AMMO) {
+            colls[i].itemIndex = (rand() % numBulletTypes);
+            colls[i].active = ammoCollectDuration[colls[i].itemIndex];
+            colls[i].bitmap = ammoCollectBitmaps[colls[i].itemIndex]
+                [getAnimFrameIndex(gs.frameCount, ammoCollectFrames[colls[i].itemIndex], ammoCollectFrameInterval[colls[i].itemIndex])];
+        }
+        else if (colls[i].type == COLLECTIBLE_OTHER) {
+            colls[i].itemIndex = (rand() % numCollectibles);
+            colls[i].active = collectibleDuration[colls[i].itemIndex];
+            colls[i].bitmap = collectBitmaps[colls[i].itemIndex]
+                [getAnimFrameIndex(gs.frameCount, collectFrames[colls[i].itemIndex], collectFrameInterval[colls[i].itemIndex])];
+        }
+
+        placed = 1;
+        for (j = 0; j < MAX_COLLECTIBLES; j++) {
+            if (j == i || !colls[j].active) { continue; }
+            if (boxesCollide(colls[i].x, colls[i].y, cWidth(i), cHeight(i),
+                        colls[j].x, colls[j].y, cWidth(j), cHeight(j))) {
+                colls[i].active = 0;
+                placed = 0;
+            }
+        }
+        if (boxesCollide(colls[i].x, colls[i].y, cWidth(i), cHeight(i),
+                    playerX, playerY, hWidth, hHeight)) {
+            colls[i].active = 0;
+            placed = 0;
+        }
+    }
 }
 
-void genecollec(int i,int x,int y)
+void generateCollectible(int i, int x, int y)
 {
-if(((gen%CPARAM1)+enemylives[i])>CPARAM2){gencollec(x,y);}
+    if (((gs.frameCount % COLLECTIBLE_SPAWN_INTERVAL) + enemyHealth[i]) > COLLECTIBLE_ENEMY_THRESHOLD) {
+        placeCollectible(x, y);
+    }
 }
 
-//Some Collectibles can't be reached for : To Frustrate !
-void updatecollec()
+void updateCollectibles()
 {
-int i;
-if(((gen%CPARAM1)+(rand()%CPARAM1))>CPARAM3){setrand();gencollec((rand()%XRES),(rand()%YRES));}
-for(i=0;i<MAXCOLLEC;i++)
-{
-if(colls[i].active)
-{
-//No checking for Collision of Animated Collectibles - it's done only during generation .
-if(colls[i].type==CA) //Ammo
-{
-colls[i].cbs=bammobs[colls[i].spec]
-[((gen%(caframes[colls[i].spec]*cafmul[colls[i].spec]))/cafmul[colls[i].spec])];
-}
-else if(colls[i].type==CO) //Others
-{
-colls[i].cbs=colbs[colls[i].spec]
-[((gen%(cgframes[colls[i].spec]*cgfmul[colls[i].spec]))/cgfmul[colls[i].spec])];
-}
-if(!collide(colls[i].x,colls[i].y,CWIDTH(i),CHEIGHT(i),getminx(),
-   getminy(),getmaxx(),getmaxy()))
-{
-colls[i].active=0;
-}
-else if(collide(colls[i].x,colls[i].y,CWIDTH(i),CHEIGHT(i),shipx,shipy,HWIDTH,HHEIGHT))
-{
-sndcollec();
-upcolscore(i);
-}
-}
-colls[i].active--;
-if(colls[i].active<0){colls[i].active=0;}
-}
+    int i;
+    if (((gs.frameCount % COLLECTIBLE_SPAWN_INTERVAL) + (rand() % COLLECTIBLE_SPAWN_INTERVAL)) > COLLECTIBLE_RANDOM_THRESHOLD) {
+        seedRandom();
+        placeCollectible((rand() % SCREEN_WIDTH), (rand() % SCREEN_HEIGHT));
+    }
+    for (i = 0; i < MAX_COLLECTIBLES; i++) {
+        if (colls[i].active) {
+            if (colls[i].type == COLLECTIBLE_AMMO) {
+                colls[i].bitmap = ammoCollectBitmaps[colls[i].itemIndex]
+                    [getAnimFrameIndex(gs.frameCount, ammoCollectFrames[colls[i].itemIndex], ammoCollectFrameInterval[colls[i].itemIndex])];
+            }
+            else if (colls[i].type == COLLECTIBLE_OTHER) {
+                colls[i].bitmap = collectBitmaps[colls[i].itemIndex]
+                    [getAnimFrameIndex(gs.frameCount, collectFrames[colls[i].itemIndex], collectFrameInterval[colls[i].itemIndex])];
+            }
+            if (!boxesCollide(colls[i].x, colls[i].y, cWidth(i), cHeight(i),
+                         getMinX(), getMinY(), getMaxX(), getMaxY())) {
+                colls[i].active = 0;
+            }
+            else if (boxesCollide(colls[i].x, colls[i].y, cWidth(i), cHeight(i),
+                             playerX, playerY, hWidth, hHeight)) {
+                playCollectSound();
+                addCollectibleScore(i);
+            }
+        }
+        colls[i].active--;
+        if (colls[i].active < 0) { colls[i].active = 0; }
+    }
 }
 
-void drawcollec()
+void drawCollectibles()
 {
-for(i=0;i<MAXCOLLEC;i++)
-{
-if(colls[i].active)
-{
-masked_blit(colls[i].cbs,dbuffer,0,0,colls[i].x,colls[i].y,CWIDTH(i),CHEIGHT(i));
-}
-}
+    int i;
+    for (i = 0; i < MAX_COLLECTIBLES; i++) {
+        if (colls[i].active) {
+            drawSpriteSize(colls[i].bitmap, colls[i].x, colls[i].y, cWidth(i), cHeight(i));
+        }
+    }
 }
 
 #endif //_M_COLLEC_
-

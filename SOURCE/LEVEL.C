@@ -1,34 +1,33 @@
-//High Scores Loop
-
 #ifndef _M_LEV_
 #define _M_LEV_
 
 #include "decl.h"
 #include "fhsc.c"
-#include "fhsc.c"
 
-//Display Msg .
-void levdone()
+void levelClearInput()
 {
-clear_keybuf();
-alfont_textout_centre(dbuffer,alfy,LEVSTR,getmidx(),getmidy()-FSIZE,activecol);
-render();
-while(1)
-{
-if(keypressed()){doshandle();if(keypressed()){break;}}
-}
-clear_keybuf();
-rest(GST);
-stopmusic();
+    if (gs.ticks == 0) {
+        clearKeys();
+        stopMusic();
+    }
+    if (isKeyPressed()) {
+        gs.level++;
+        if (gs.level >= numLevels) { gs.win = 1; gs.isDone = 1; }
+        gs.enemiesKilled = 0;
+        initGame();
+        playMusic();
+        if (gs.win) { setGameState(STATE_GAME_OVER); }
+        else { setGameState(STATE_PLAYING); }
+    }
 }
 
-//High Scores Loop .
-int levincrement()
+void levelClearRender()
 {
-if(level<(NUMLEVELS-1)){level++;levdone();return 1;}
-if(level==(NUMLEVELS-1)){win=1;done=1;}
-return 0;
+    clearScreen();
+    updateStarfield();
+    drawStarfield();
+    drawCenteredTextNoAA(getMidY() - FONT_SIZE, makecol(0, 220, 0), "%s", levelClearStr);
+    drawCenteredText(getMidY() + FONT_SIZE, activeColor, "%s", anyKeyStr);
 }
 
 #endif //_M_LEV_
-

@@ -5,30 +5,75 @@
 
 #include "decl.h"
 
-#define chstat() {sflag=(1-sflag);ininwrite=1;}
+#define toggleStats() { showStats = (1 - showStats); }
 
-void drawstat()
+static int getProgressColor(int value, int maxValue)
 {
- int i;
- if(sflag)
- {
- masked_blit(icons[MEDI],dbuffer,0,0,MEDIX,MEDIY,IWIDTH(MEDI),IHEIGHT(MEDI));
- masked_blit(icons[SCO],dbuffer,0,0,SCOX,SCOY,IWIDTH(SCO),IHEIGHT(SCO));
- masked_blit(icons[LEV],dbuffer,0,0,LEVX,LEVY,IWIDTH(LEV),IHEIGHT(LEV));
- for(i=0;i<lives;i++)
- {
- masked_blit(icons[LIF],dbuffer,0,0,LIFX+(i*IWIDTH(LIF)),LIFY,IWIDTH(LIF),IHEIGHT(LIF));
- }
- if(active>0){sprintf(buff,"%3u",active);}else{sprintf(buff,"%s",STRNONE);}
- alfont_textout(dbuffer,alfy,buff,(IWIDTH(MEDI)+MEDIX+HORIZSPC),MEDIY,activecol);
- sprintf(buff,SCOFORMAT,score);
- alfont_textout(dbuffer,alfy,buff,(IWIDTH(SCO)+SCOX+HORIZSPC),SCOY,activecol);
- sprintf(buff,"%u",level);
- alfont_textout(dbuffer,alfy,buff,(IWIDTH(LEV)+LEVX+HORIZSPC),LEVY,activecol);
- if(!curbul) sprintf(buff,"%s (%s)",bullnames[curbul],INFISTR);
- else sprintf(buff,"%s (%3d)",bullnames[curbul],ammo[curbul]);
- alfont_textout(dbuffer,alfy,buff,AMMOX,AMMOY,activecol);
- }
+    int pct = value * 100 / maxValue;
+    if (pct < 17)  { return makecol(255, 0, 0); }       /* red */
+    if (pct < 33)  { return makecol(255, 165, 0); }     /* orange */
+    if (pct < 50)  { return makecol(255, 255, 0); }     /* yellow */
+    if (pct < 67)  { return makecol(0, 255, 0); }       /* green */
+    if (pct < 84)  { return makecol(0, 0, 255); }       /* blue */
+    return makecol(138, 43, 226);                        /* violet */
+}
+
+void drawProgressBar()
+{
+    if (gs.state != STATE_PLAYING) { return; }
+    unsigned int killTarget = killsToAdvanceLevel[gs.level];
+    if (killTarget <= 0) { return; }
+
+    int barWidth = SCREEN_WIDTH / 10;
+    int barHeight = 10;
+    int barX = LEVX + iWidth(ICON_LEVEL) + HORIZONTAL_SPACING + (FONT_SIZE * 2);
+    int barY = LEVY + (iHeight(ICON_LEVEL) - barHeight) / 2;
+
+    int progress = gs.enemiesKilled * barWidth / killTarget;
+    if (progress > barWidth) { progress = barWidth; }
+
+    rectfill(drawingBuffer, barX, barY, barX + barWidth, barY + barHeight, makecol(30, 30, 30));
+    if (progress > 0) {
+        rectfill(drawingBuffer, barX, barY, barX + progress, barY + barHeight,
+                 getProgressColor(progress, barWidth));
+    }
+}
+
+void drawStatusBar()
+{
+    int i;
+    if (!showStats) { return; }
+    drawProgressBar();
+
+    /* top-left: medal icon + health */
+    drawSpriteSize(statIcons[ICON_MEDAL], MEDIX, MEDIY, iWidth(ICON_MEDAL), iHeight(ICON_MEDAL));
+    if (playerHealth > 0) {
+        drawText(MEDIX + iWidth(ICON_MEDAL) + HORIZONTAL_SPACING, MEDIY, activeColor, "%3u", playerHealth);
+    } else {
+        drawText(MEDIX + iWidth(ICON_MEDAL) + HORIZONTAL_SPACING, MEDIY, activeColor, "%s", unknownStr);
+    }
+
+    /* top-center: level icon + level number */
+    drawSpriteSize(statIcons[ICON_LEVEL], LEVX, LEVY, iWidth(ICON_LEVEL), iHeight(ICON_LEVEL));
+    drawText(LEVX + iWidth(ICON_LEVEL) + HORIZONTAL_SPACING, LEVY, activeColor, "%u", gs.level);
+
+    /* mid-left: life icons (one per remaining life) */
+    for (i = 0; i < gs.lives; i++) {
+        drawSpriteSize(statIcons[ICON_LIFE], LIFX + (i * iWidth(ICON_LIFE)), LIFY,
+                       iWidth(ICON_LIFE), iHeight(ICON_LIFE));
+    }
+
+    /* bottom-left: score icon + score value */
+    drawSpriteSize(statIcons[ICON_SCORE], SCOX, SCOY, iWidth(ICON_SCORE), iHeight(ICON_SCORE));
+    drawText(SCOX + iWidth(ICON_SCORE) + HORIZONTAL_SPACING, SCOY, activeColor, scoreFormat, gs.score);
+
+    /* bottom-center: bullet name + ammo count */
+    if (!currentBullet) {
+        drawText(AMMOX, AMMOY, activeColor, "%s (%s)", bulletNames[currentBullet], infiniteStr);
+    } else {
+        drawText(AMMOX, AMMOY, activeColor, "%s (%3d)", bulletNames[currentBullet], bulletAmmo[currentBullet]);
+    }
 }
 
 #endif //_M_STAT_
+

@@ -8,143 +8,143 @@
 #include "sounds.c"
 #include "shots.c"
 
-void gameover()
+void updateStarfield();
+void drawStarfield();
+
+void gameOverInput()
 {
-clear_keybuf();
-docolorscale(dbuffer,0,0,XRES,YRES);
-gm=0;
-stopmusic();
-if(!win)
-{
-sndgexplode();
-while(1)
-{
-alfont_textout_centre(dbuffer,alfy,GOVSTR,getmidx(),getmidy()-FSIZE,govcol);
-render();
-updgovcol();
-gen++;
-if(keypressed()){doshandle();if(keypressed()){break;}}
-}
-rest(GST);
-ssndgexplode();
-}
-else
-{
-sndwon(); 
-while(1)  
-{
-alfont_textout_centre(dbuffer,alfy,WINSTR,getmidx(),getmidy()-FSIZE,govcol);
-render();
-updgovcol();
-gen++;
-if(keypressed()){doshandle();if(keypressed()){break;}}
-}
-rest(GST);
-ssndwon();
-}
-clear_keybuf();
-playmusic();
+    if (gs.ticks == 0) {
+        clearKeys();
+        gs.isInGame = 0;
+        stopMusic();
+        if (gs.win) { playWonSound(); } else { playPlayerExplodeSound(); }
+    }
+    if (isKeyPressed()) {
+        if (gs.win) { stopWonSound(); } else { stopPlayerExplodeSound(); }
+        clearKeys();
+        playMusic();
+        setGameState(STATE_HIGH_SCORE_ENTRY);
+    }
 }
 
-void pex(int fl)
+void pauseInput()
 {
- clear_keybuf();
- if(fl)
- { 
- alfont_textout_centre_aa(dbuffer,alfy,QDSTR,getmidx(),getmidy()-FSIZE,activecol);
- }
- else
- {
- alfont_textout_centre_aa(dbuffer,alfy,PAUSESTR,getmidx(),getmidy()-FSIZE,activecol);
- }
- render();
- while(1)
- {
-  if(keypressed())
-  {
-  doshandle();
-  if(fl)
-  {
-  if(key[KEY_Y]){done=2;clear_keybuf();return;}
-  if(key[KEY_N]){clear_keybuf();rest(GST);return;}
-  if(key[KEY_ESC]){clear_keybuf();rest(GST);return;}
-  }
-  else
-  {
-  if(key[KEY_P]){clear_keybuf();rest(GST);return;}  
-  }
-  }
- }
+    if (gs.ticks == 0) {
+        clearKeys();
+        stopMusic();
+        stopCollectSound();
+        stopShootSound();
+        stopExplodeSound();
+        stopPlayerExplodeSound();
+        stopEnemyShootSound();
+        stopWonSound();
+    }
+    clearKeys();
+    if (gs.state == STATE_QUIT_DIALOG) {
+        if (EDGE(KEY_Y)) { playMusic(); setGameState(STATE_GAME_OVER); return; }
+        if (EDGE(KEY_N) || EDGE(KEY_ESC)) { playMusic(); setGameState(STATE_PLAYING); return; }
+    } else {
+        if (EDGE(KEY_P)) { playMusic(); setGameState(STATE_PLAYING); return; }
+    }
 }
 
-void restartmsg()
+void restartInput()
 {
- clear_keybuf();
- docolorscale(dbuffer,0,0,XRES,YRES);
- sndgexplode();
- alfont_textout_centre_aa(dbuffer,alfy,KEYSTR,getmidx(),getmidy()-FSIZE,activecol);
- render();
- while(1)
- {
- if(keypressed()){doshandle();if(keypressed()){break;}}
- }
- clear_keybuf();
- ssndgexplode();
- rest(GST);
+    if (gs.ticks == 0) {
+        clearKeys();
+        playPlayerExplodeSound();
+    }
+    if (isKeyPressed()) {
+        stopPlayerExplodeSound();
+        clearKeys();
+        initGame();
+        setGameState(STATE_PLAYING);
+    }
 }
 
-void starfieldinit()
+void gameOverRender()
 {
-setrand();
-for(i=0;i<NUMSTARS;i++)
-{
-stars[i].x=rand()%XRES;
-stars[i].y=rand()%YRES;
-stars[i].state=rand()%LAYERS;
-}
+    clearScreen();
+    updateStarfield();
+    drawStarfield();
+    drawCenteredTextNoAA(getMidY() - FONT_SIZE, gameOverColor, "%s", gs.win ? winStr : gameOverStr);
+    updateGameOverColor();
 }
 
-void updatestarfield()
+void pauseRender()
 {
-for(i=0;i<NUMSTARS;i++)
-{
-stars[i].x+=XRES-(SSPEED*(stars[i].state+1));stars[i].x%=XRES;
-}
-}
-
-void thrashstarfield(int xd,int yd)
-{
-for(i=0;i<NUMSTARS;i++)
-{
-stars[i].x+=XRES+(SSPEED*xd);stars[i].x%=XRES;
-stars[i].y+=YRES+(SSPEED*yd);stars[i].y%=YRES;
-}
+    clearScreen();
+    updateStarfield();
+    drawStarfield();
+    int isQuitPrompt = (gs.state == STATE_QUIT_DIALOG);
+    if (isQuitPrompt) {
+        drawCenteredText(getMidY() - FONT_SIZE, activeColor, "%s", quitDialogStr);
+    } else {
+        drawCenteredText(getMidY() - FONT_SIZE, activeColor, "%s", pauseStr);
+    }
 }
 
-void drawstarfield()
+void restartRender()
 {
-setrand();
-for(i=0;i<NUMSTARS;i++)
-{
-putpixel(dbuffer,stars[i].x,stars[i].y,starcolors[rand()%LAYERS]);
-}
+    clearScreen();
+    updateStarfield();
+    drawStarfield();
+    drawCenteredTextNoAA(getMidY() - (FONT_SIZE + VERTICAL_SPACING), gameOverColor, "%s", gameOverStr);
+    updateGameOverColor();
+    drawCenteredText(getMidY() + (FONT_SIZE + VERTICAL_SPACING), activeColor, "%s", anyKeyStr);
 }
 
-void CheckExplode(int i)
+void initStarfield()
 {
-if(enemies[i].explframe >= 0 && enemies[i].explframe < (MUL*NUMEXPLODE) )
-{
- if(enemies[i].explframe==0)
- {
-  sndexplode();
- }
- enemies[i].enemybs=explodeframe[((int)(enemies[i].explframe/MUL))%NUMEXPLODE];  
- masked_blit(enemies[i].enemybs,dbuffer,0,0,enemies[i].x,enemies[i].y,enemies[i].enemybs->w,enemies[i].enemybs->h); 
+    int i;
+    seedRandom();
+    for (i = 0; i < numStars; i++) {
+        stars[i].x = rand() % SCREEN_WIDTH;
+        stars[i].y = rand() % SCREEN_HEIGHT;
+        stars[i].state = rand() % STAR_LAYERS;
+    }
 }
-if(enemies[i].explframe>=0 )
+
+void updateStarfield()
 {
- enemies[i].explframe++;
+    int i;
+    for (i = 0; i < numStars; i++) {
+        stars[i].x += SCREEN_WIDTH - (STAR_SPEED * (stars[i].state + 1));
+        stars[i].x %= SCREEN_WIDTH;
+    }
 }
+
+void thrashStarfield(int deltaX, int deltaY)
+{
+    int i;
+    for (i = 0; i < numStars; i++) {
+        stars[i].x += SCREEN_WIDTH + (STAR_SPEED * deltaX);
+        stars[i].x %= SCREEN_WIDTH;
+        stars[i].y += SCREEN_HEIGHT + (STAR_SPEED * deltaY);
+        stars[i].y %= SCREEN_HEIGHT;
+    }
+}
+
+void drawStarfield()
+{
+    int i;
+    seedRandom();
+    for (i = 0; i < numStars; i++) {
+        putpixel(drawingBuffer, stars[i].x, stars[i].y, starColors[rand() % STAR_LAYERS]);
+    }
+}
+
+void checkExplode(int i)
+{
+    if (enemies[i].explosionFrame >= 0 && enemies[i].explosionFrame < (EXPLOSION_MULTIPLIER * numExplodeFrames)) {
+        if (enemies[i].explosionFrame == 0) { playExplodeSound(); }
+        enemies[i].bitmap = explodeFrames[((int)(enemies[i].explosionFrame / EXPLOSION_MULTIPLIER)) % numExplodeFrames];
+        drawSprite(enemies[i].bitmap, enemies[i].x, enemies[i].y / SIN_SCALE);
+    }
+    if (enemies[i].explosionFrame >= 0) {
+        enemies[i].explosionFrame++;
+    }
 }
  
 #endif // _M_FX_
+

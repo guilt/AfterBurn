@@ -1,11 +1,11 @@
 10
-vO!|vO!|vO! 1 2 4 6435 79
-vO!|vO!|vO! 1 2 4 15510 100
-vO!|vO!|vO! 1 2 4 4515 75
-vO!|vO!|vO! 1 2 3 8775 55
-vO!|vO!|vO! 1 2 3 2940 24
-vO!|vO!|vO! 1 2 0 19245 75
-vO!|vO!|vO! 0 2 3 15855 6
-vO!|vO!|vO! 0 2 1 18750 89
-vO!|vO!|vO! 0 2 1 15865 100
-vO!|vO!|vO! 0 2 0 4350 78
+Pachu 1 4 7 10995 1
+Koushiik 1 4 6 19785 82
+Vinu 1 4 6 1965 86
+Kaushik 1 4 4 10245 11
+Alladi 1 4 3 10980 92
+Guilt 1 4 3 9615 71
+Mezhi 0 2 4 3585 77
+Mottai 0 0 7 12600 60
+B|ra 0 1 5 6750 9
+Scribbleink 0 1 2 19665 74

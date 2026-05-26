@@ -1,3 +1,4 @@
-@REM Green Theme
-@if exist AB.EXE AB.EXE THEME/GREEN/GREEN.INI
-@if not exist AB.EXE echo Can't Run .
+@REM Launch AfterBurn with the GREEN theme
+@SET APP=%~dp0
+@IF NOT EXIST "%APP%AB.EXE" "%APP%BUILD.BAT"
+@"%APP%AB.EXE" "%APP%THEME/GREEN/GREEN.INI"

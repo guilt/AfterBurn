@@ -7,20 +7,20 @@
 #define VIconFileName "ICON1.ICO"
 
 //File Version Number .
-#define VFileVersion "0.0"
+#define VFileVersion "1.0"
 
 //Product Version Number .
-#define VProductVersion "0.95"
+#define VProductVersion "1.0"
 
 //Other Version Details
 #define VProductName "AfterBurn"
 #define VCompanyName "ODE"
-#define VLegalCopyright "Copyrights © Karthik Kumar V & Nikhil Karnad"
+#define VLegalCopyright "Copyright Â© 2002-Present Karthik Kumar Viswanathan & Nikhil Karnad"
 #define VLegalTrademarks "None"
-#define VFileDescription "A Video Game"
+#define VFileDescription "AfterBurn Video Game"
 #define VComments "None"
-#define VInternalName "Can't Say"
-#define VOriginalFilename "Can't Say"
+#define VInternalName "AfterBurn"
+#define VOriginalFilename "AB"
 
 //Language Details
 #define VCountry 0x409

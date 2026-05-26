@@ -10,149 +10,124 @@
 #include "math.h"
 #include "allegro.h"
 #include "alfont.h"
-
-#ifdef DUMB
 #include "aldumb.h"
-#else
-#include "jgmod.h"
-#endif //DUMB
-
-#ifdef DUMB
-#ifdef DUMBOGG
-#include "vorbis/vorbisfile.h"
-#include "dumbogg.h"
-#endif //DUMBOGG
-#endif //DUMB
 
 //General
-#ifndef DEL
-#define DEL '\\' //Change for GNU/Linux etc.
+#ifndef DIR_DELIMITER
+#define DIR_DELIMITER '\\' //Change for GNU/Linux etc.
 #else
-#undef DEL
-#define DEL '/'
-#endif //DEL
-#ifndef ADEL
-#define ADEL '/'
+#undef DIR_DELIMITER
+#define DIR_DELIMITER '/'
+#endif //DIR_DELIMITER
+#ifndef ALT_DIR_DELIMITER
+#define ALT_DIR_DELIMITER '/'
 #else
-#undef ADEL
-#define ADEL '\\'
-#endif //ADEL
-#define ASPC '|'
-#define SPC ' '
-#define END '\n'
-#define BSP '\b'
-#define E_OK  0
-#define E_ERR -1
-#define STRB  80
+#undef ALT_DIR_DELIMITER
+#define ALT_DIR_DELIMITER '\\'
+#endif //ALT_DIR_DELIMITER
+#define ARROW_SEPARATOR '|'
+#define SPACE_CHAR ' '
+#define NEWLINE_CHAR '\n'
+#define BACKSPACE_CHAR '\b'
+#define RESULT_OK  0
+#define RESULT_ERROR -1
+#define STRING_BUFFER_SIZE  80
 
 //GFX
-#define GM GFX_AUTODETECT //_FULLSCREEN
-#define XRES 640
-#define YRES 480
-#define BPP 16
-#define getmaxx() (XRES-1)
-#define getmaxy() (YRES-1)
-#define getminx() 0
-#define getminy() 0
-#define getmidx() XRES/2
-#define getmidy() YRES/2
-#define NUM_COLORS 256
+#define GFX_AUTO_MODE GFX_AUTODETECT_FULLSCREEN
+#define SCREEN_WIDTH 640
+#define SCREEN_HEIGHT 480
+#define BITS_PER_PIXEL 16
+#define getMaxX() (SCREEN_WIDTH-1)
+#define getMaxY() (SCREEN_HEIGHT-1)
+#define getMinX() 0
+#define getMinY() 0
+#define getMidX() SCREEN_WIDTH/2
+#define getMidY() SCREEN_HEIGHT/2
+#define PALETTE_COLORS 256
 
 //Videos
-#define VLOOP 1
-#define VNOLOOP 0
+#define VIDEO_LOOP 1
+#define VIDEO_NO_LOOP 0
 
 //Sound
-#define SLOOP 1
-#define SNOLOOP 0
+#define SOUND_LOOP 1
+#define SOUND_NO_LOOP 0
 
-#define MLOOP TRUE
-#define MNOLOOP FALSE
+#define MUSIC_LOOP TRUE
+#define MUSIC_NO_LOOP FALSE
 
-#define SLEFT 0
-#define SCENTER 127
-#define SRIGHT 255
+#define PAN_LEFT 0
+#define PAN_CENTER 127
+#define PAN_RIGHT 255
 
-#define SPSLOW 500
-#define SPNORMAL 1000
-#define SPFAST 2000
+#define SPEED_SLOW 500
+#define SPEED_NORMAL 1000
+#define SPEED_FAST 2000
 
-#define DPAN SCENTER
-#define SPEED SPNORMAL
+#define DEFAULT_PAN PAN_CENTER
+#define DEFAULT_SPEED SPEED_NORMAL
 
-#define NUMDIGV 8
-#define NUMMIDV 8
-#define SPV -1
-
-#ifdef DUMB
-
-#ifdef DUMBOGG
-#define DUMBOGGLP 1 //Ogg Loopin' parameter
-#endif //DUMBOGG
+#define NUM_DIGITAL_VOLUMES 8
+#define NUM_MIDI_VOLUMES 8
+#define SPEAKER_VOLUME -1
 
 #define DUMB_MONO 1
 #define DUMB_STEREO 2
 #define DUMB_CHANNELS DUMB_STEREO
 
 #define DUMB_POS 0
-#define DUMB_FREQ 48000 //Or Whatever !
-#define DUMB_BUFSIZE 8192 //Or Whatever !
+#define DUMB_FREQ 48000
+#define DUMB_BUFSIZE 8192
 
 #define DUMB_RES_QUAL 4
 #define DUMB_ITM2M 64
 
-#define DUMB_REFRESH (int)((1000*DUMB_BUFSIZE)/DUMB_FREQ) //Should Do the Trick .
+#define DUMB_REFRESH (int)((1000*DUMB_BUFSIZE)/DUMB_FREQ)
 #define DUMB_VOL 1.0
 
 #define MUSIC DUH
 
-#define music_exit() dumb_exit()
+#define musicExit() dumb_exit()
 
-#else
-
-#define NUMMODV 4
-
-#define MUSIC JGMOD
-
-#define music_exit()
-
-#endif //DUMB
-
-#define DIGMODE DIGI_AUTODETECT
-#define MIDMODE MIDI_AUTODETECT
+#define DIGITAL_MODE DIGI_AUTODETECT
+#define MIDI_MODE MIDI_AUTODETECT
 
 //Maximum Volume .
-#define VOLUME 255
+#define MAX_VOLUME 255
 
 //KeyBoard
-#define getch() while(!keypressed()){}clear_keybuf()
+#define isKeyPressed() keypressed()
+#define clearKeys() clear_keybuf()
+#define getChar() while(!isKeyPressed()){}clearKeys()
 
 //For Sound .
-unsigned int DVOL=VOLUME,MVOL=VOLUME,PAN=DPAN;
+unsigned int DVOL=MAX_VOLUME,MVOL=MAX_VOLUME,PAN=DEFAULT_PAN;
 
 #ifdef ALLEGRO_STATICLINK
 //I got this Fund. Straight !
-int (*call) () = keypressed;
+int (*keyPressed) () = keypressed;
 #else
-#define call keypressed
+#define keyPressed keypressed
 #endif //ALLEGRO_STATICLINK
 
 
 //Working version : courtesy Nikhil .
-int strgetch()
+int readKeyChar()
 {
 int c;
-if(keypressed())
+if(isKeyPressed())
 {
-if(key[KEY_ENTER]||key[KEY_ESC]){return END;}
-if(key[KEY_SPACE]||key[KEY_TAB]){return SPC;}
-if(key[KEY_BACKSPACE]){return BSP;}
+if(key[KEY_ENTER]||key[KEY_ESC]){return NEWLINE_CHAR;}
+if(key[KEY_SPACE]||key[KEY_TAB]){return SPACE_CHAR;}
+if(key[KEY_BACKSPACE]){return BACKSPACE_CHAR;}
 c=readkey();
-clear_keybuf();
+clearKeys();
 return (c&0xff);
 }
-return END;
+return NEWLINE_CHAR;
 }
 
 #endif //_M_SYSDEFS_
+
 

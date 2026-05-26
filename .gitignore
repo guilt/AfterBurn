@@ -1,4 +1,10 @@
 *.OBJ
 *.O
 *.EXE
+*.DLL
 *.UPX
+*.TXT
+*.HSC
+*.PRF
+DIST/
+OBJ/

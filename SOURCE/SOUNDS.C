@@ -1,257 +1,224 @@
-//Sounds .
-
 #ifndef _M_SOUND_
 #define _M_SOUND_
 
 #include "decl.h"
 #include "flog.c"
 
-#ifdef DUMB
+void stopCollectSound();
+void stopShootSound();
+void stopExplodeSound();
+void stopPlayerExplodeSound();
+void stopEnemyShootSound();
+void stopWonSound();
 
-//From Bruce Perry .
-
-static void poll_mod()
+static void pollMod()
 {
     ++semaphore;
-    al_poll_duh(adp);
+    al_poll_duh(dumbPlayer);
     --semaphore;
 }
 
-static void stop_mod()
+static void stopMod()
 {
-AL_DUH_PLAYER *p;
-    if (adp)
-     {
-        p = adp;
-        remove_int(poll_mod);
-        adp=NULL;
-        while(semaphore){yield_timeslice();}
+    AL_DUH_PLAYER* p;
+    if (dumbPlayer) {
+        p = dumbPlayer;
+        remove_int(pollMod);
+        dumbPlayer = NULL;
+        while (semaphore) { rest(0); }
         al_stop_duh(p);
     }
 }
 
-static void play_mod(MUSIC *duh,int mloop)
+static void playMod(MUSIC* duh, int shouldLoop)
 {
-    stop_mod();
-    adp=al_start_duh(duh,DUMB_CHANNELS,DUMB_POS,DUMB_VOL,DUMB_BUFSIZE,DUMB_FREQ);
-    if(adp)install_int_ex(poll_mod,BPS_TO_TIMER(DUMB_REFRESH));
+    stopMod();
+    dumbPlayer = al_start_duh(duh, DUMB_CHANNELS, DUMB_POS, DUMB_VOL, DUMB_BUFSIZE, DUMB_FREQ);
+    if (dumbPlayer) { install_int_ex(pollMod, BPS_TO_TIMER(DUMB_REFRESH)); }
 }
 
-#endif //DUMB
-
-void presndinit()
+void preSoundInit()
 {
-reserve_voices(NUMDIGV,NUMMIDV);
-set_volume_per_voice(SPV);
-#ifdef DUMB
-dumb_resampling_quality=DUMB_RES_QUAL;
-dumb_it_max_to_mix=DUMB_ITM2M;
-dumb_register_packfiles();
-#else
-fast_loading = FALSE;
-enable_m15 = TRUE;
-enable_lasttrk_loop = TRUE;
-#endif //DUMB
+    reserve_voices(NUM_DIGITAL_VOLUMES, NUM_MIDI_VOLUMES);
+    set_volume_per_voice(SPEAKER_VOLUME);
+    dumb_resampling_quality = DUMB_RES_QUAL;
+    dumb_it_max_to_mix = DUMB_ITM2M;
+    dumb_register_packfiles();
 }
 
-void dovol()
+void applyVolume()
 {
-if(serr) return;
-set_volume(DVOL,MVOL);
+    if (soundError) { return; }
+    set_volume(DVOL, MVOL);
 }
 
-void postsndinit()
+void postSoundInit()
 {
-if(serr) return;
-dovol();
-#ifndef DUMB
-if(install_mod(NUMMODV)<0)
-{
- merr=1;
-}
-#endif //DUMB
+    if (soundError) { return; }
+    applyVolume();
 }
 
-void stopmusic()
+void stopMusic()
 {
-if(serr)return;
-if(merr)return;
-stop_mod();
+    if (soundError || musicError) { return; }
+    stopMod();
 }
 
-void playmusic()
+void pauseMusic()
 {
-if(serr)return;
-if(merr)return;
-stopmusic();
-if(plmusic)
-{
-if(gm)
-{
-play_mod(music[level],MLOOP);
-}
-else
-{
-play_mod(mmusic,MLOOP);
-}
-}
+    if (soundError || musicError || !dumbPlayer) { return; }
+    remove_int(pollMod);
+    while (semaphore) { rest(0); }
+    al_pause_duh(dumbPlayer);
 }
 
-void togglemusic()
+void resumeMusic()
 {
-if(serr)return;
-if(merr)return;
-plmusic=1-plmusic;
-if(plmusic)
-{
-sprintf(logmsg,"Switched Music On ");logwrite();
-playmusic();
-}
-else
-{
-sprintf(logmsg,"Switched Music Off ");logwrite();
-stopmusic();
-}
-ininwrite=1;
+    if (soundError || musicError || !dumbPlayer) { return; }
+    al_resume_duh(dumbPlayer);
+    install_int_ex(pollMod, BPS_TO_TIMER(DUMB_REFRESH));
 }
 
-void ssndvideo()
+void playMusic()
 {
-if(serr)return;
-stop_sample(vidsample); 
+    if (soundError || musicError) { return; }
+    stopMusic();
+    if (!isMusicEnabled) { return; }
+    if (gs.isInGame) { playMod(levelMusic[gs.level], MUSIC_LOOP); }
+    else          { playMod(menuMusic, MUSIC_LOOP); }
 }
 
-void sndvideo()
+static void onSwitchOut()
 {
-if(serr)return;
-ssndvideo();
-if(plsounds)
-{
-play_sample(vidsample,VOLUME,PAN,SPEED,SNOLOOP);
-}
+    set_volume(0, 0);
+    pauseMusic();
 }
 
-void ssndshoot()
+static void onSwitchIn()
 {
-if(serr)return;
-stop_sample(shoot[curbul]); 
+    applyVolume();
+    resumeMusic();
 }
 
-void sndshoot()
+void toggleMusic()
 {
-if(serr)return;
-ssndshoot();
-if(plsounds)
-{
-play_sample(shoot[curbul],VOLUME,PAN,SPEED,SNOLOOP);
-}
-}
-
-void ssndcollec()
-{
-if(serr)return;
-stop_sample(scollec); 
+    if (soundError || musicError) { return; }
+    isMusicEnabled = 1 - isMusicEnabled;
+    if (isMusicEnabled) {
+        logWrite("Switched levelMusic on.");
+        playMusic();
+    } else {
+        logWrite("Switched levelMusic off.");
+        stopMusic();
+    }
 }
 
-void sndcollec()
+void toggleSound()
 {
-if(serr)return;
-ssndcollec();
-if(plsounds)
-{
-play_sample(scollec,VOLUME,PAN,SPEED,SNOLOOP);
-}
-}
-
-void ssndeshoot()
-{
-if(serr||curebul<0)return;
-stop_sample(eshoot[curebul]); 
-}
-
-void sndeshoot()
-{
-if(serr||curebul<0)return;
-ssndeshoot();
-if(plsounds)
-{
-play_sample(eshoot[curebul],VOLUME,PAN,SPEED,SNOLOOP);
-}
+    if (soundError) { return; }
+    isSoundEnabled = 1 - isSoundEnabled;
+    if (!isSoundEnabled) {
+        logWrite("Switched sounds off.");
+        stopCollectSound();
+        stopShootSound();
+        stopExplodeSound();
+        stopPlayerExplodeSound();
+        stopEnemyShootSound();
+        stopWonSound();
+    } else {
+        logWrite("Switched sounds on.");
+    }
 }
 
-void ssndexplode()
+void stopVideoSound()
 {
-if(serr)return;
-stop_sample(burst);
+    if (soundError) { return; }
+    stop_sample(videoSample);
 }
 
-void sndexplode()
+void playVideoSound()
 {
-if(serr)return;
-ssndexplode();
-if(plsounds)
-{
-play_sample(burst,VOLUME,PAN,SPEED,SNOLOOP);
-}
+    if (soundError) { return; }
+    stopVideoSound();
+    if (isSoundEnabled) { play_sample(videoSample, MAX_VOLUME, PAN, DEFAULT_SPEED, SOUND_NO_LOOP); }
 }
 
-void ssndwon()
+void stopShootSound()
 {
-if(serr)return;
-stop_sample(won);
+    if (soundError) { return; }
+    stop_sample(shootSamples[currentBullet]);
 }
 
-void sndwon()
+void playShootSound()
 {
-if(serr)return;
-ssndwon();
-if(plsounds)
-{
-play_sample(won,VOLUME,PAN,SPEED,SNOLOOP);
-}
+    if (soundError) { return; }
+    stopShootSound();
+    if (isSoundEnabled) { play_sample(shootSamples[currentBullet], MAX_VOLUME, PAN, DEFAULT_SPEED, SOUND_NO_LOOP); }
 }
 
-void ssndgexplode()
+void stopCollectSound()
 {
-if(serr)return;
-stop_sample(died);
+    if (soundError) { return; }
+    stop_sample(collectSample);
 }
 
-void sndgexplode()
+void playCollectSound()
 {
-if(serr)return;
-ssndgexplode();
-if(plsounds)
-{
-play_sample(died,VOLUME,PAN,SPEED,SNOLOOP);
-}
+    if (soundError) { return; }
+    stopCollectSound();
+    if (isSoundEnabled) { play_sample(collectSample, MAX_VOLUME, PAN, DEFAULT_SPEED, SOUND_NO_LOOP); }
 }
 
-void togglesound()
+void stopEnemyShootSound()
 {
-if(serr)return;
-plsounds=1-plsounds;
-if(!plsounds)
-{
-sprintf(logmsg,"Switched Sounds Off ");logwrite();
-ssndcollec();
-ssndshoot();
-ssndexplode();
-ssndgexplode();
-ssndeshoot();
-ssndwon();
-}
-else
-{
-sprintf(logmsg,"Switched Sounds On ");logwrite();
-}
-ininwrite=1;
+    if (soundError || currentEnemyBullet < 0) { return; }
+    stop_sample(enemyShootSamples[currentEnemyBullet]);
 }
 
-void evshandle()
+void playEnemyShootSound()
 {
-if(key[KEY_M]){togglemusic();}
-if(key[KEY_S]){togglesound();}
+    if (soundError || currentEnemyBullet < 0) { return; }
+    stopEnemyShootSound();
+    if (isSoundEnabled) { play_sample(enemyShootSamples[currentEnemyBullet], MAX_VOLUME, PAN, DEFAULT_SPEED, SOUND_NO_LOOP); }
+}
+
+void stopExplodeSound()
+{
+    if (soundError) { return; }
+    stop_sample(explodeSample);
+}
+
+void playExplodeSound()
+{
+    if (soundError) { return; }
+    stopExplodeSound();
+    if (isSoundEnabled) { play_sample(explodeSample, MAX_VOLUME, PAN, DEFAULT_SPEED, SOUND_NO_LOOP); }
+}
+
+void stopWonSound()
+{
+    if (soundError) { return; }
+    stop_sample(wonSample);
+}
+
+void playWonSound()
+{
+    if (soundError) { return; }
+    stopWonSound();
+    if (isSoundEnabled) { play_sample(wonSample, MAX_VOLUME, PAN, DEFAULT_SPEED, SOUND_NO_LOOP); }
+}
+
+void stopPlayerExplodeSound()
+{
+    if (soundError) { return; }
+    stop_sample(playerDieSample);
+}
+
+void playPlayerExplodeSound()
+{
+    if (soundError) { return; }
+    stopPlayerExplodeSound();
+    if (isSoundEnabled) { play_sample(playerDieSample, MAX_VOLUME, PAN, DEFAULT_SPEED, SOUND_NO_LOOP); }
 }
 
 #endif //_M_SOUND_

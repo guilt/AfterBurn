@@ -1,5 +1,3 @@
-//Enemy Bullet Routines .
-
 #ifndef _M_EBULL_
 #define _M_EBULL_
 
@@ -9,95 +7,78 @@
 #include "effects.c"
 #include "sounds.c"
 
-void ebullinit()
+void initEnemyBullets()
 {
- for(i=0;i<MAXEBULLETS;i++)
- {
-  ebullets[i].active=0;
-  ebullets[i].type=0;
- }
- curebul=-1;
+    memset(ebullets, 0, sizeof(ebullets));
+    currentEnemyBullet = -1;
 }
 
-void genebullet(int k)
+void generateEnemyBullet(int enemyIndex)
 {
-int ldone=0;
- curebul=-1;
- for(i=0;i<MAXEBULLETS&&!ldone;i++)
- {
-  if
-  (ebullets[i].active==0&&
-  ebtype[enemies[k].type]>=0
-  &&!((gen+1)%eblimit[ebtype[enemies[k].type]]))
-  { 
-    curebul=ebullets[i].type=ebtype[enemies[k].type];
-    ebullets[i].bbs=ebullbs[ebullets[i].type]
-    [((gen%(ebframes[ebullets[i].type]*EBMUL[ebullets[i].type]))/EBMUL[ebullets[i].type])];         
-    ebullets[i].x=(enemies[k].x-EBWIDTH(i));
-    ebullets[i].y=(enemies[k].y+(EHEIGHT(k)/2));
-    if(collide(ebullets[i].x,ebullets[i].y,EBWIDTH(i),EBHEIGHT(i),
-    getminx(),getminy(),getmaxx(),getmaxy()))
-    {
-    ldone=1;
-    ebullets[i].active=1;
-    sndeshoot();
+    int i, spawned = 0;
+    currentEnemyBullet = -1;
+    for (i = 0; i < MAX_ENEMY_BULLETS && !spawned; i++) {
+        if (ebullets[i].active != 0) { continue; }
+        if (enemyBulletTypeByEnemy[enemies[enemyIndex].type] < 0) { continue; }
+        if ((gs.frameCount + 1) % enemyBulletSpawnInterval[enemyBulletTypeByEnemy[enemies[enemyIndex].type]]) { continue; }
+
+        currentEnemyBullet = ebullets[i].type = enemyBulletTypeByEnemy[enemies[enemyIndex].type];
+        ebullets[i].bitmap = enemyBulletBitmaps[ebullets[i].type]
+            [getAnimFrameIndex(gs.frameCount, enemyBulletFrames[ebullets[i].type], enemyBulletFrameInterval[ebullets[i].type])];
+        ebullets[i].x = (enemies[enemyIndex].x - ebWidth(i));
+        ebullets[i].y = (enemies[enemyIndex].y / SIN_SCALE + (eHeight(enemyIndex) / 2));
+
+        if (boxesCollide(ebullets[i].x, ebullets[i].y, ebWidth(i), ebHeight(i),
+                    getMinX(), getMinY(), getMaxX(), getMaxY())) {
+            spawned = 1;
+            ebullets[i].active = 1;
+            playEnemyShootSound();
+        }
     }
-   }
- }
 }
 
-void updateebullets()
+void updateEnemyBullets()
 {
- for(i=0;i<MAXEBULLETS;i++)
- {
-  if(ebullets[i].active)
-  { 
-   ebullets[i].bbs=ebullbs[ebullets[i].type]
-   [((gen%(ebframes[ebullets[i].type]*EBMUL[ebullets[i].type]))/EBMUL[ebullets[i].type])];         
-   if(!collide(ebullets[i].x,ebullets[i].y,EBWIDTH(i),EBHEIGHT(i),getminx(),
-    getminy(),getmaxx(),getmaxy()))
-   {
-    ebullets[i].active=0;
-   }
-  }
-}
-}
-
-void ebdisplace(int i)
-{
-ebullets[i].x -= xebspeed[ebullets[i].type]; 
-}
-
-void updateebulletsandhero()
-{
-for(i=0;i<MAXEBULLETS;i++)
-{
- if(ebullets[i].active)
- {
-    if(collide(ebullets[i].x,ebullets[i].y,EBWIDTH(i),EBHEIGHT(i),
-    shipx,shipy,HWIDTH,HHEIGHT)) //Hero is Dying !
-    {
-     ebullets[i].active = 0;
-     blaf=1;
-     sndexplode();
-     active -= ebdamage[ebullets[i].type];
-     if(active<=0){active=EBFD;}
+    int i;
+    for (i = 0; i < MAX_ENEMY_BULLETS; i++) {
+        if (!ebullets[i].active) { continue; }
+        ebullets[i].bitmap = enemyBulletBitmaps[ebullets[i].type]
+            [getAnimFrameIndex(gs.frameCount, enemyBulletFrames[ebullets[i].type], enemyBulletFrameInterval[ebullets[i].type])];
+        if (!boxesCollide(ebullets[i].x, ebullets[i].y, ebWidth(i), ebHeight(i),
+                     getMinX(), getMinY(), getMaxX(), getMaxY())) {
+            ebullets[i].active = 0;
+        }
     }
-  }
- }
 }
-  
-void drawebullets()
+
+void displaceEnemyBullet(int i)
 {
-for(i=0;i<MAXEBULLETS;i++)
- {
-  if(ebullets[i].active)
-  {
-  masked_blit(ebullets[i].bbs,dbuffer,0,0,ebullets[i].x,ebullets[i].y,
-  EBWIDTH(i),EBHEIGHT(i));
-  ebdisplace(i);
-  }
- }
+    ebullets[i].x -= enemyBulletXSpeed[ebullets[i].type];
+}
+
+void updateEnemyBulletsAndPlayer()
+{
+    int i;
+    for (i = 0; i < MAX_ENEMY_BULLETS; i++) {
+        if (!ebullets[i].active) { continue; }
+        if (!boxesCollide(ebullets[i].x, ebullets[i].y, ebWidth(i), ebHeight(i),
+                     playerX, playerY, hWidth, hHeight)) { continue; }
+        ebullets[i].active = 0;
+        isBlinking = 1;
+        playExplodeSound();
+        playerHealth -= enemyBulletDamage[ebullets[i].type];
+        if (playerHealth <= 0) { playerHealth = ENEMY_BULLET_FIRE_DELAY; }
+    }
+}
+
+void drawEnemyBullets()
+{
+    int i;
+    for (i = 0; i < MAX_ENEMY_BULLETS; i++) {
+        if (!ebullets[i].active) { continue; }
+        drawSpriteSize(ebullets[i].bitmap, ebullets[i].x, ebullets[i].y, ebWidth(i), ebHeight(i));
+        displaceEnemyBullet(i);
+    }
 }
 
 #endif //_M_EBULL_

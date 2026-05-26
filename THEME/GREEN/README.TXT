@@ -1,3 +1,3 @@
-Green Theme .
+Green Theme.
 
-Contains : Logo ,Font ,Box Ammo .
+Contains: Logo, Font, Box Ammo.

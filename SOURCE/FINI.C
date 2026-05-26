@@ -1,340 +1,284 @@
-//File Initialisation .
-
 #ifndef _M_FINI_
 #define _M_FINI_
 
+#include <stdarg.h>
+#include <string.h>
 #include "decl.h"
 #include "files.h"
 
-void iniopen()
+static int readIntTruncate(FILE* f)
 {
-int i,j;
-inifp = fopen(FIni,"r");
-if(!inifp)
-{
-sprintf(logmsg,"Couldn't Read INI file : %s",FIni);logwrite();
-ininwrite=1;return;
-}
-sprintf(logmsg,"Reading INI file : %s",FIni);logwrite();
-//Logo .
-fscanf(inifp,"%s",FLogo);
-//Font .
-fscanf(inifp,"%s",FFont);
-fscanf(inifp," %d %d %d",&acr,&acg,&acb);
-fscanf(inifp," %d %d %d",&pcr,&pcg,&pcb);
-//Ship .
-fscanf(inifp,"%s",FShip);
-fscanf(inifp," %d %d %d %d %d",&SHFRAMES,&PARAM,&MAXLIFE,&MAXLIVES,&MAXPOSLIVES);
-//Ship Blink .
-fscanf(inifp,"%s",FShipBlink);
-fscanf(inifp," %d",&SHBLFRAMES);
-//Ship Blank .
-fscanf(inifp,"%s",FBlank);
-fscanf(inifp," %d",&MAXBLAF);
-//Levels
-fscanf(inifp," %d",&NUMLEVELS);
-for(i=0;i<NUMLEVELS;i++)
-{
-fscanf(inifp," %d",&rkills[i]);
-}
-//Bullets .
-fscanf(inifp,"%s",FBullets);
-fscanf(inifp," %d",&NUMBULLTYPES);
-for(i=0;i<NUMBULLTYPES;i++)
-{
-fscanf(inifp,"%s",bullnames[i]);
-ThillaLangadi(bullnames[i],ASPC,SPC);
-fscanf(inifp," %d %d %d %d %d %d %d %d %d %lf %lf",&bframes[i],&BMUL[i],&numbullets[i],
-&xbspeed[i],&ybspeed[i],&blimit[i],&bdir[i],&dammo[i],&maxammo[i],&dbdamage[i],
-&maxbdamage[i]);
-}
-//Enemy Bullets .
-fscanf(inifp,"%s",FEBullets);
-fscanf(inifp," %d",&NUMEBULLTYPES);
-for(i=0;i<NUMEBULLTYPES;i++)
-{
-fscanf(inifp," %d %d %d %d %lf",&ebframes[i],&EBMUL[i],&xebspeed[i],&eblimit[i],&ebdamage[i]);
-}
-//Ammo .
-fscanf(inifp,"%s",FCAmmo);
-for(i=0;i<NUMBULLTYPES;i++)
-{
-fscanf(inifp," %d %d %d %d %d",&caframes[i],&cafmul[i],&calife[i],&cgammo[i],&cgascore[i]);
-}
-//Other Collectibles .
-fscanf(inifp,"%s",FCOthers);
-fscanf(inifp," %d",&COLNUMS);
-for(i=0;i<COLNUMS;i++)
-{
-fscanf(inifp," %d %d %d %d %d %d",&cgframes[i],&cgfmul[i],&cglife[i],&cglives[i],&cgiscore[i],&cclife[i]);
-}
-//Enemies .
-fscanf(inifp,"%s",FEnemies);
-fscanf(inifp," %d",&ENEMYTYPES);
-for(i=0;i<ENEMYTYPES;i++)
-{
-fscanf(inifp," %d %d %d %d %d %d %lf %lf",&enemyframes[i],&FMUL[i],&enemylives[i],
-&enemydam[i],&emove[i],&ebtype[i],&enemyxsp[i],&enemyysp[i]);
-}
-//Enemy map .
-for(i=0;i<NUMLEVELS;i++)
- for(j=0;j<ENEMYTYPES;j++)
-{
-fscanf(inifp," %d",&elmap[i][j]);
-}
-//Stars .
-fscanf(inifp," %d",&NUMSTARS);
-//Explosions .
-fscanf(inifp,"%s",FExplosions);
-fscanf(inifp," %d",&NUMEXPLODE);
-//Statistics Icons .
-fscanf(inifp,"%s",FIcons);
-//Sounds .
-fscanf(inifp,"%s",FMusic);
-fscanf(inifp,"%s",FMMusic);
-fscanf(inifp,"%s",FShoot);
-fscanf(inifp,"%s",FEShoot);
-fscanf(inifp,"%s",FExplodeSound);
-fscanf(inifp,"%s",FExplodeDied);
-fscanf(inifp,"%s",FSCollec);
-fscanf(inifp,"%s",FSWon);
-fscanf(inifp," %d %d %u %u",&plsounds,&plmusic,&DVOL,&MVOL);
-//Scores .
-fscanf(inifp,"%s",FHsc);
-//Statistics .
-fscanf(inifp,"%d",&sflag);
-//Videos .
-fscanf(inifp,"%d",&numvideos);
-for(i=0;i<numvideos;i++)
-{
-fscanf(inifp,"%s %s %d %d",videos[i].filename,videos[i].password,
-&videos[i].an,&videos[i].vn);
-ThillaLangadi(videos[i].filename,ADEL,DEL);
-ThillaLangadi(videos[i].filename,ASPC,SPC);
-ThillaLangadi(videos[i].password,ASPC,SPC);
-}
-//Strings .
-for(i=0;i<NUMMENUITEMS;i++)
-{
-fscanf(inifp,"%s",menu[i]);ThillaLangadi(menu[i],ASPC,SPC);
-}
-for(i=0;i<NUMOPTMENUITEMS;i++)
-{
-fscanf(inifp,"%s",omenu[i]);ThillaLangadi(omenu[i],ASPC,SPC);
-}
-for(i=0;i<STATES;i++)
-{
-fscanf(inifp,"%s",flaSTR[i]);ThillaLangadi(flaSTR[i],ASPC,SPC);
-}
-fscanf(inifp,"%s",GOVSTR);ThillaLangadi(GOVSTR,ASPC,SPC);
-fscanf(inifp,"%s",PAUSESTR);ThillaLangadi(PAUSESTR,ASPC,SPC);
-fscanf(inifp,"%s",QDSTR);ThillaLangadi(QDSTR,ASPC,SPC);
-fscanf(inifp,"%s",KEYSTR);ThillaLangadi(KEYSTR,ASPC,SPC);
-fscanf(inifp,"%s",INFISTR);ThillaLangadi(INFISTR,ASPC,SPC);
-fscanf(inifp,"%s",STRNONE);ThillaLangadi(STRNONE,ASPC,SPC);
-fscanf(inifp,"%s",HSCSTRNAME);ThillaLangadi(HSCSTRNAME,ASPC,SPC);
-fscanf(inifp,"%s",HSCSTRLEVEL);ThillaLangadi(HSCSTRLEVEL,ASPC,SPC);
-fscanf(inifp,"%s",HSCSTRSCORE);ThillaLangadi(HSCSTRSCORE,ASPC,SPC);
-fscanf(inifp,"%s",STRCHSCNAME);ThillaLangadi(STRCHSCNAME,ASPC,SPC);
-fscanf(inifp,"%s",STRNNONE);ThillaLangadi(STRNNONE,ASPC,SPC);
-fscanf(inifp,"%s",UNISTR);ThillaLangadi(UNISTR,ASPC,SPC);
-fscanf(inifp,"%s",LEVSTR);ThillaLangadi(LEVSTR,ASPC,SPC);
-fscanf(inifp,"%s",WINSTR);ThillaLangadi(WINSTR,ASPC,SPC);
-//Others .
-fscanf(inifp," %lf %lf %lf",&orparam,&ogparam,&obparam);
-fscanf(inifp," %lf %lf %lf",&orsparam,&ogsparam,&obsparam);
-fscanf(inifp," %lf %lf %lf",&orgparam,&oggparam,&obgparam);
-fscanf(inifp,"%s",inimsg);
-sprintf(logmsg,"Read INI file : %s",FIni);logwrite();
-fclose(inifp);
-normalise();
+    char buf[64];
+    if (fscanf(f, "%63s", buf) != 1) return 0;
+    char* dot = strchr(buf, '.');
+    if (dot) *dot = '\0';
+    return atoi(buf);
 }
 
-void iniwrite()
+static int readFixedPoint(FILE* f)
 {
-if(inifp){fprintf(inifp,"%s\n",inimsg);}
+    char buf[64];
+    if (fscanf(f, "%63s", buf) != 1) return 0;
+    if (strcmp(buf, "-1") == 0) return -1;
+    char* dot = strchr(buf, '.');
+    if (!dot) return atoi(buf) * SIN_SCALE;
+    int whole = atoi(buf);
+    int frac = 0, digits = 0;
+    char* p = dot + 1;
+    while (*p >= '0' && *p <= '9' && digits < 4) { frac = frac * 10 + (*p - '0'); digits++; p++; }
+    int divisor = 1;
+    { int k; for (k = 0; k < digits; k++) divisor *= 10; }
+    if (whole < 0) {
+        whole = -whole;
+        return -(whole * SIN_SCALE + frac * SIN_SCALE / divisor);
+    }
+    return whole * SIN_SCALE + frac * SIN_SCALE / divisor;
 }
 
-void iniclose()
+static void normalizePath(char* p);
+
+void iniOpenFile()
 {
-int i,j;
-double r,g,b;
-char tbuf[STRB];
-if(!ininwrite)
-{
-sprintf(logmsg,"Needn't Write INI file : %s",FIni);logwrite();
-return;
+    int i, j;
+    iniFile = fileOpen(iniPath, "r");
+    if (!iniFile) {
+        logWrite("Couldn't read INI file: %s", iniPath);
+        return;
+    }
+    logWrite("Reading INI file: %s", iniPath);
+
+    // Logo & gameFont
+    fscanf(iniFile, "%s", logoPath);
+    fscanf(iniFile, "%s", fontPath);
+    fscanf(iniFile, " %d %d %d", &activeColorR, &activeColorG, &activeColorB);
+    fscanf(iniFile, " %d %d %d", &passiveColorR, &passiveColorG, &passiveColorB);
+
+    // Ship
+    fscanf(iniFile, "%s", shipPath);
+    fscanf(iniFile, " %d %d %d %d %d", &shipFrames, &shipAnimSpeed, &maxHealth, &maxLives, &maxPossibleLives);
+    fscanf(iniFile, "%s", shipBlinkPath);
+    fscanf(iniFile, " %d", &shipBlinkFrames);
+    fscanf(iniFile, "%s", shipBlankPath);
+    fscanf(iniFile, " %d", &maxBlinkActiveFrames);
+
+    // Levels
+    fscanf(iniFile, " %d", &numLevels);
+    for (i = 0; i < numLevels; i++) {
+        fscanf(iniFile, " %d", &killsToAdvanceLevel[i]);
+    }
+
+    // Bullets
+    fscanf(iniFile, "%s", bulletPath);
+    fscanf(iniFile, " %d", &numBulletTypes);
+    for (i = 0; i < numBulletTypes; i++) {
+        fscanf(iniFile, "%s", bulletNames[i]);
+        replaceChar(bulletNames[i], ARROW_SEPARATOR, SPACE_CHAR);
+        fscanf(iniFile, " %d %d %d %d %d %d %d %d %d",
+               &bulletFrames[i], &bulletFrameInterval[i], &bulletsPerType[i],
+               &bulletXSpeed[i], &bulletYSpeed[i], &bulletSpawnInterval[i], &bulletDirection[i],
+               &defaultBulletAmmo[i], &maxBulletAmmo[i]);
+        defaultBulletDamage[i] = readIntTruncate(iniFile);
+        maxBulletDamage[i] = readIntTruncate(iniFile);
+    }
+
+    // Enemy bullets
+    fscanf(iniFile, "%s", enemyBulletPath);
+    fscanf(iniFile, " %d", &numEnemyBulletTypes);
+    for (i = 0; i < numEnemyBulletTypes; i++) {
+        fscanf(iniFile, " %d %d %d %d",
+               &enemyBulletFrames[i], &enemyBulletFrameInterval[i], &enemyBulletXSpeed[i], &enemyBulletSpawnInterval[i]);
+        enemyBulletDamage[i] = readIntTruncate(iniFile);
+    }
+
+    // bulletAmmo
+    fscanf(iniFile, "%s", ammoPath);
+    for (i = 0; i < numBulletTypes; i++) {
+        fscanf(iniFile, " %d %d %d %d %d",
+               &ammoCollectFrames[i], &ammoCollectFrameInterval[i], &ammoCollectDuration[i], &ammoCollectQuantity[i], &ammoCollectScore[i]);
+    }
+
+    // Other collectibles
+    fscanf(iniFile, "%s", collectiblePath);
+    fscanf(iniFile, " %d", &numCollectibles);
+    for (i = 0; i < numCollectibles; i++) {
+        fscanf(iniFile, " %d %d %d %d %d %d",
+               &collectFrames[i], &collectFrameInterval[i], &collectHealthBonus[i], &collectLivesBonus[i], &collectScore[i], &collectibleDuration[i]);
+    }
+
+    // Enemies
+    fscanf(iniFile, "%s", enemyPath);
+    fscanf(iniFile, " %d", &numEnemyTypes);
+    for (i = 0; i < numEnemyTypes; i++) {
+        fscanf(iniFile, " %d %d %d %d %d %d",
+               &enemyFrames[i], &enemyFrameInterval[i], &enemyHealth[i], &enemyDamage[i],
+               &enemyHasMovement[i], &enemyBulletTypeByEnemy[i]);
+        enemyXSpeed[i] = readIntTruncate(iniFile);
+        enemyYSpeed[i] = readIntTruncate(iniFile);
+    }
+
+    // Enemy map per level
+    for (i = 0; i < numLevels; i++) {
+        for (j = 0; j < numEnemyTypes; j++) {
+            fscanf(iniFile, " %d", &enemyLevelMap[i][j]);
+        }
+    }
+
+    // Effects
+    fscanf(iniFile, " %d", &numStars);
+    fscanf(iniFile, "%s", explosionPath);
+    fscanf(iniFile, " %d", &numExplodeFrames);
+
+    // Statistics statIcons
+    fscanf(iniFile, "%s", statIconPath);
+
+    // Sounds & music
+    fscanf(iniFile, "%s", levelMusicPath);
+    fscanf(iniFile, "%s", menuMusicPath);
+    fscanf(iniFile, "%s", shootSoundPath);
+    fscanf(iniFile, "%s", enemyShootSoundPath);
+    fscanf(iniFile, "%s", explodeSoundPath);
+    fscanf(iniFile, "%s", playerDieSoundPath);
+    fscanf(iniFile, "%s", collectSoundPath);
+    fscanf(iniFile, "%s", winSoundPath);
+    fscanf(iniFile, " %d %d %u %u", &isSoundEnabled, &isMusicEnabled, &DVOL, &MVOL);
+
+    // Scores & stats
+    fscanf(iniFile, "%s", highScorePath);
+    fscanf(iniFile, "%d", &showStats);
+
+    // Videos
+    fscanf(iniFile, "%d", &numVideos);
+    for (i = 0; i < numVideos; i++) {
+        fscanf(iniFile, "%s %s %d %d",
+               videos[i].filename, videos[i].password,
+               &videos[i].animIndex, &videos[i].videoIndex);
+        replaceChar(videos[i].filename, ALT_DIR_DELIMITER, DIR_DELIMITER);
+        replaceChar(videos[i].filename, ARROW_SEPARATOR, SPACE_CHAR);
+        strToUpper(videos[i].filename);
+        replaceChar(videos[i].password, ARROW_SEPARATOR, SPACE_CHAR);
+    }
+
+    // Localised strings (encoded with ARROW_SEPARATOR instead of spaces in the INI)
+    for (i = 0; i < NUM_MENU_ITEMS; i++) {
+        fscanf(iniFile, "%s", menu[i]);
+        replaceChar(menu[i], ARROW_SEPARATOR, SPACE_CHAR);
+    }
+    for (i = 0; i < NUM_OPTIONS_MENU_ITEMS; i++) {
+        fscanf(iniFile, "%s", optionsMenu[i]);
+        replaceChar(optionsMenu[i], ARROW_SEPARATOR, SPACE_CHAR);
+    }
+    for (i = 0; i < NUM_OPTION_STATES; i++) {
+        fscanf(iniFile, "%s", optionStates[i]);
+        replaceChar(optionStates[i], ARROW_SEPARATOR, SPACE_CHAR);
+    }
+    char* uiStrings[] = {
+        gameOverStr, pauseStr, quitDialogStr, anyKeyStr, infiniteStr, unknownStr,
+        hsNameStr, hsLevelStr, hsScoreStr, hsPromptStr, anonymousStr,
+        unimplementedStr, levelClearStr, winStr
+    };
+    for (i = 0; i < (int)(sizeof(uiStrings) / sizeof(uiStrings[0])); i++) {
+        fscanf(iniFile, "%s", uiStrings[i]);
+        replaceChar(uiStrings[i], ARROW_SEPARATOR, SPACE_CHAR);
+    }
+
+    // Colour parameters (stored as decimal strings in INI)
+    gameRScaleOverride = readFixedPoint(iniFile);
+    gameGScaleOverride = readFixedPoint(iniFile);
+    gameBScaleOverride = readFixedPoint(iniFile);
+    starRScaleOverride = readFixedPoint(iniFile);
+    starGScaleOverride = readFixedPoint(iniFile);
+    starBScaleOverride = readFixedPoint(iniFile);
+    govRScaleOverride = readFixedPoint(iniFile);
+    govGScaleOverride = readFixedPoint(iniFile);
+    govBScaleOverride = readFixedPoint(iniFile);
+
+    { char endTag[STRING_BUFFER_SIZE]; fscanf(iniFile, "%s", endTag); }
+
+    logWrite("Read INI file: %s", iniPath);
+    fclose(iniFile);
+
+    /* normalize INI-read paths to 8.3 format */
+    {
+        char* iniPaths[] = {
+            logoPath, fontPath, shipPath, shipBlinkPath, shipBlankPath,
+            bulletPath, enemyBulletPath, ammoPath, collectiblePath, enemyPath,
+            explosionPath, statIconPath, levelMusicPath, menuMusicPath,
+            shootSoundPath, enemyShootSoundPath, explodeSoundPath, playerDieSoundPath,
+            collectSoundPath, winSoundPath, highScorePath
+        };
+        int i;
+        for (i = 0; i < (int)(sizeof(iniPaths) / sizeof(iniPaths[0])); i++) {
+            normalizePath(iniPaths[i]);
+        }
+    }
+
+    /* overlay PRF (user preferences) over theme INI values */
+    iniFile = fileOpen(prfPath, "r");
+    if (iniFile) {
+        logWrite("Overlaying PRF file: %s", prfPath);
+        fscanf(iniFile, " %d %d %d", &activeColorR, &activeColorG, &activeColorB);
+        fscanf(iniFile, " %d %d %d", &passiveColorR, &passiveColorG, &passiveColorB);
+        fscanf(iniFile, " %d %d %u %u", &isSoundEnabled, &isMusicEnabled, &DVOL, &MVOL);
+        fscanf(iniFile, " %d", &showStats);
+        gameRScaleOverride = readIntTruncate(iniFile);
+        gameGScaleOverride = readIntTruncate(iniFile);
+        gameBScaleOverride = readIntTruncate(iniFile);
+        starRScaleOverride = readIntTruncate(iniFile);
+        starGScaleOverride = readIntTruncate(iniFile);
+        starBScaleOverride = readIntTruncate(iniFile);
+        govRScaleOverride = readIntTruncate(iniFile);
+        govGScaleOverride = readIntTruncate(iniFile);
+        govBScaleOverride = readIntTruncate(iniFile);
+        fscanf(iniFile, " %d %d %d", &savedResW, &savedResH, &savedGfxMode);
+        fclose(iniFile);
+        logWrite("Overlaid PRF file: %s", prfPath);
+    }
 }
-inifp = fopen(FIni,"w");
-if(!inifp)
+
+static void normalizePath(char* p)
 {
-sprintf(logmsg,"Couldn't Write INI file : %s",FIni);logwrite();
-return;
+    convertToLocalPath(p);
+    strToUpper(p);
+    prependDir(p, getAppDataDir());
 }
-sprintf(logmsg,"Writing INI file : %s",FIni);logwrite();
-denormalise();
-//Logo .
-sprintf(inimsg,"%s",FLogo);iniwrite();
-//Font .
-sprintf(inimsg,"%s",FFont);iniwrite();
-sprintf(inimsg,"%d %d %d",acr,acg,acb);iniwrite();
-sprintf(inimsg,"%d %d %d",pcr,pcg,pcb);iniwrite();
-//Ship .
-sprintf(inimsg,"%s",FShip);iniwrite();
-sprintf(inimsg,"%d %d %d %d %d",SHFRAMES,PARAM,MAXLIFE,MAXLIVES,MAXPOSLIVES);
-iniwrite();
-//Ship Blink .
-sprintf(inimsg,"%s",FShipBlink);iniwrite();
-sprintf(inimsg,"%d",SHBLFRAMES);iniwrite();
-//Ship Blank .
-sprintf(inimsg,"%s",FBlank);iniwrite();
-sprintf(inimsg,"%d",MAXBLAF);iniwrite();
-//Levels
-sprintf(inimsg,"%d",NUMLEVELS);iniwrite();
-for(i=0;i<NUMLEVELS;i++)
+
+static void prfWrite(const char* format, ...)
 {
-sprintf(inimsg,"%d",rkills[i]);iniwrite();
+    if (!iniFile) { return; }
+    va_list args;
+    va_start(args, format);
+    vfprintf(iniFile, format, args);
+    va_end(args);
+    fputc('\n', iniFile);
 }
-//Bullets .
-sprintf(inimsg,"%s",FBullets);iniwrite();
-sprintf(inimsg,"%d",NUMBULLTYPES);iniwrite();
-for(i=0;i<NUMBULLTYPES;i++)
+
+static void writeColorOrSentinel(int overrideParam, int red, int green, int blue)
 {
-ThillaLangadi(bullnames[i],SPC,ASPC);
-sprintf(inimsg,"%s",bullnames[i]);iniwrite();
-sprintf(inimsg,"%d %d %d %d %d %d %d %d %d %f %f",bframes[i],BMUL[i],numbullets[i],
-xbspeed[i],ybspeed[i],blimit[i],bdir[i],dammo[i],maxammo[i],dbdamage[i],
-maxbdamage[i]);
-iniwrite();
+    int R = -1, G = -1, B = -1;
+    if (overrideParam >= 0) { R = red; G = green; B = blue; }
+    prfWrite("%d %d %d", R, G, B);
 }
-//Enemy Bullets .
-sprintf(inimsg,"%s",FEBullets);iniwrite();
-sprintf(inimsg,"%d",NUMEBULLTYPES);iniwrite();
-for(i=0;i<NUMEBULLTYPES;i++)
+
+void writePreferences()
 {
-sprintf(inimsg,"%d %d %d %d %f",ebframes[i],EBMUL[i],xebspeed[i],eblimit[i],ebdamage[i]);
-iniwrite();
-}
-//Ammo .
-sprintf(inimsg,"%s",FCAmmo);iniwrite();
-for(i=0;i<NUMBULLTYPES;i++)
-{
-sprintf(inimsg,"%d %d %d %d %d",caframes[i],cafmul[i],calife[i],cgammo[i],cgascore[i]);iniwrite();
-}
-//Other Collectibles .
-sprintf(inimsg,"%s",FCOthers);iniwrite();
-sprintf(inimsg,"%d",COLNUMS);iniwrite();
-for(i=0;i<COLNUMS;i++)
-{
-sprintf(inimsg,"%d %d %d %d %d %d",cgframes[i],cgfmul[i],cglife[i],cglives[i],cgiscore[i],cclife[i]);
-iniwrite();
-}
-//Enemies .
-sprintf(inimsg,"%s",FEnemies);iniwrite();
-sprintf(inimsg,"%d",ENEMYTYPES);iniwrite();
-for(i=0;i<ENEMYTYPES;i++)
-{
-sprintf(inimsg,"%d %d %d %d %d %d %f %f",enemyframes[i],FMUL[i],enemylives[i],
-enemydam[i],emove[i],ebtype[i],enemyxsp[i],enemyysp[i]);
-iniwrite();
-}
-//Enemy map .
-for(i=0;i<NUMLEVELS;i++)
-{
-for(j=0;j<ENEMYTYPES;j++)
-{
-if(j)
-{
-sprintf(inimsg,"%s %d",tbuf,elmap[i][j]);
-}
-else
-{
-sprintf(inimsg,"%d",elmap[i][j]);
-}
-sprintf(tbuf,"%s",inimsg);
-}
-iniwrite();
-}
-//Stars .
-sprintf(inimsg,"%d",NUMSTARS);iniwrite();
-//Explosions .
-sprintf(inimsg,"%s",FExplosions);iniwrite();
-sprintf(inimsg,"%d",NUMEXPLODE);iniwrite();
-//Statistics Icons .
-sprintf(inimsg,"%s",FIcons);iniwrite();
-//Sounds .
-sprintf(inimsg,"%s",FMusic);iniwrite();
-sprintf(inimsg,"%s",FMMusic);iniwrite();
-sprintf(inimsg,"%s",FShoot);iniwrite();
-sprintf(inimsg,"%s",FEShoot);iniwrite();
-sprintf(inimsg,"%s",FExplodeSound);iniwrite();
-sprintf(inimsg,"%s",FExplodeDied);iniwrite();
-sprintf(inimsg,"%s",FSCollec);iniwrite();
-sprintf(inimsg,"%s",FSWon);iniwrite();
-sprintf(inimsg,"%d %d %u %u",plsounds,plmusic,DVOL,MVOL);iniwrite();
-//Scores .
-sprintf(inimsg,"%s",FHsc);iniwrite();
-//Statistics .
-sprintf(inimsg,"%d",sflag);iniwrite();
-//Videos .
-sprintf(inimsg,"%d",numvideos);iniwrite();
-for(i=0;i<numvideos;i++)
-{
-ThillaLangadi(videos[i].filename,DEL,ADEL);
-ThillaLangadi(videos[i].filename,SPC,ASPC);
-ThillaLangadi(videos[i].password,SPC,ASPC);
-sprintf(inimsg,"%s %s %d %d",videos[i].filename,videos[i].password,
-videos[i].an,videos[i].vn);
-iniwrite();
-}
-//Strings .
-for(i=0;i<NUMMENUITEMS;i++)
-{
-ThillaLangadi(menu[i],SPC,ASPC);sprintf(inimsg,"%s",menu[i]);iniwrite();
-}
-for(i=0;i<NUMOPTMENUITEMS;i++)
-{
-ThillaLangadi(omenu[i],SPC,ASPC);sprintf(inimsg,"%s",omenu[i]);iniwrite();
-}
-for(i=0;i<STATES;i++)
-{
-ThillaLangadi(flaSTR[i],SPC,ASPC);sprintf(inimsg,"%s",flaSTR[i]);iniwrite();
-}
-ThillaLangadi(GOVSTR,SPC,ASPC);sprintf(inimsg,"%s",GOVSTR);iniwrite();
-ThillaLangadi(PAUSESTR,SPC,ASPC);sprintf(inimsg,"%s",PAUSESTR);iniwrite();
-ThillaLangadi(QDSTR,SPC,ASPC);sprintf(inimsg,"%s",QDSTR);iniwrite();
-ThillaLangadi(KEYSTR,SPC,ASPC);sprintf(inimsg,"%s",KEYSTR);iniwrite();
-ThillaLangadi(INFISTR,SPC,ASPC);sprintf(inimsg,"%s",INFISTR);iniwrite();
-ThillaLangadi(STRNONE,SPC,ASPC);sprintf(inimsg,"%s",STRNONE);iniwrite();
-ThillaLangadi(HSCSTRNAME,SPC,ASPC);sprintf(inimsg,"%s",HSCSTRNAME);iniwrite();
-ThillaLangadi(HSCSTRLEVEL,SPC,ASPC);sprintf(inimsg,"%s",HSCSTRLEVEL);iniwrite();
-ThillaLangadi(HSCSTRSCORE,SPC,ASPC);sprintf(inimsg,"%s",HSCSTRSCORE);iniwrite();
-ThillaLangadi(STRCHSCNAME,SPC,ASPC);sprintf(inimsg,"%s",STRCHSCNAME);iniwrite();
-ThillaLangadi(STRNNONE,SPC,ASPC);sprintf(inimsg,"%s",STRNNONE);iniwrite();
-ThillaLangadi(UNISTR,SPC,ASPC);sprintf(inimsg,"%s",UNISTR);iniwrite();
-ThillaLangadi(LEVSTR,SPC,ASPC);sprintf(inimsg,"%s",LEVSTR);iniwrite();
-ThillaLangadi(WINSTR,SPC,ASPC);sprintf(inimsg,"%s",WINSTR);iniwrite();
-//Others .
-r=g=b=-1;
-if(orparam>=0) r=rparam;
-if(ogparam>=0) g=gparam;
-if(obparam>=0) b=bparam;
-sprintf(inimsg,"%f %f %f",r,g,b);iniwrite();
-r=g=b=-1;
-if(orsparam>=0) r=rsparam;
-if(ogsparam>=0) g=gsparam;
-if(obsparam>=0) b=bsparam;
-sprintf(inimsg,"%f %f %f",r,g,b);iniwrite();
-r=g=b=-1;
-if(orgparam>=0) r=rgparam;
-if(oggparam>=0) g=ggparam;
-if(obgparam>=0) b=bgparam;
-sprintf(inimsg,"%f %f %f",r,g,b);iniwrite();
-//Done .
-sprintf(inimsg,"%s INI",TITLE);iniwrite();
-normalise();
-sprintf(logmsg,"Wrote INI file : %s",FIni);logwrite();
-fclose(inifp);
+    iniFile = fileOpen(prfPath, "w");
+    if (!iniFile) {
+        logWrite("Couldn't write PRF file: %s", prfPath);
+        return;
+    }
+    logWrite("Writing PRF file: %s", prfPath);
+
+    prfWrite("%d %d %d", activeColorR, activeColorG, activeColorB);
+    prfWrite("%d %d %d", passiveColorR, passiveColorG, passiveColorB);
+    prfWrite("%d %d %u %u", isSoundEnabled, isMusicEnabled, DVOL, MVOL);
+    prfWrite("%d", showStats);
+    writeColorOrSentinel(gameRScaleOverride, gameRScale, gameGScale, gameBScale);
+    writeColorOrSentinel(starRScaleOverride, starRScale, starGScale, starBScale);
+    writeColorOrSentinel(govRScaleOverride, govRScale, govGScale, govBScale);
+    prfWrite("%d %d %d", screenWidth, screenHeight, savedGfxMode);
+
+    fclose(iniFile);
+    logWrite("Wrote PRF file: %s", prfPath);
 }
 
 #endif //_M_FINI

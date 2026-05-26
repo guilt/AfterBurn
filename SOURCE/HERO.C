@@ -10,102 +10,89 @@
 #include "stat.c"
 #include "shots.c"
 #include "sounds.c"
-#include "options.c"
 
-void chkdead()
+void checkIfDead()
 {
-if(!active&&!lives){done=1;}
-}
-
-void evhandle()
-{
-if(keypressed())
-{
-if(key[KEY_ESC]){pex(PEX);}
-evshandle();
-doshandle();
-if(key[KEY_P]){pex(PNOEX);}
-if(key[KEY_O]){optloop();}
-if(key[KEY_T]) {chstat(); }
-if(key[KEY_SPACE]){genbullet();poll_keyboard();}
-if(key[KEY_UP])
-{
-if(shipy>0){shipy-=SHSPEED;}
-else thrashstarfield(NODIR,YPDIR);
-}
-if(key[KEY_DOWN])
-{
-if(shipy<(YRES-1-SHSPEED-HHEIGHT)){shipy+=SHSPEED;}
-else thrashstarfield(NODIR,YNDIR);
-}
-if(key[KEY_LEFT])
-{
-if(shipx>0){shipx-=SHSPEED;}
-else thrashstarfield(XPDIR,NODIR);
-}
-if(key[KEY_RIGHT])
-{
-if(shipx<(XRES-1-SHSPEED-HWIDTH)) {shipx+=SHSPEED;}
-else thrashstarfield(XNDIR,NODIR);
-}
-change_bulltype();
-clear_keybuf();
-}
-shipx%=XRES;shipy%=YRES;
-chkdead();
+    if (!playerHealth && !gs.lives) { gs.isDone = 1; }
 }
 
-void updeclife()
+void playingInput()
 {
-if(active<=0){active=0;lives--;}
+    clearKeys();
+    if (EDGE(KEY_ESC)) { setGameState(STATE_QUIT_DIALOG); return; }
+    if (EDGE(KEY_P)) { setGameState(STATE_PAUSED); return; }
+    if (EDGE(KEY_O)) { gs.prevState = STATE_PLAYING; setGameState(STATE_OPTIONS); return; }
+    if (key[KEY_SPACE]) { generateBullet(); }
+    if (key[KEY_UP]) {
+        if (playerY > 0) { playerY -= shipSpeed; }
+        else { thrashStarfield(NODIR, YPDIR); }
+    }
+    if (key[KEY_DOWN]) {
+        if (playerY < (SCREEN_HEIGHT - 1 - shipSpeed - hHeight)) { playerY += shipSpeed; }
+        else { thrashStarfield(NODIR, YNDIR); }
+    }
+    if (key[KEY_LEFT]) {
+        if (playerX > 0) { playerX -= shipSpeed; }
+        else { thrashStarfield(XPDIR, NODIR); }
+    }
+    if (key[KEY_RIGHT]) {
+        if (playerX < (SCREEN_WIDTH - 1 - shipSpeed - hWidth)) { playerX += shipSpeed; }
+        else { thrashStarfield(XNDIR, NODIR); }
+    }
+    changeBulletType();
+    playerX %= SCREEN_WIDTH;
+    playerY %= SCREEN_HEIGHT;
 }
 
-void UpdateHero()
+void updateDecliningLife()
 {
- for(i=0;i<NUMENEMIES;i++)
- {
-  if(enemies[i].active&&collide(enemies[i].x,enemies[i].y,EWIDTH(i),EHEIGHT(i),shipx,shipy,HWIDTH,HHEIGHT))
-  {
-   blaf=1;
-   enemies[i].active=0;
-   enemies[i].explframe=0;
-   active-= enemydam[enemies[i].type];
-   if(active<0){active=0;}
-  } 
- }
+    if (playerHealth <= 0) {
+        playerHealth = 0;
+        if (gs.lives > 0) { gs.lives--; }
+    }
 }
 
-void drawhero()
+void updatePlayer()
 {
-if(blaf>0)
-{
-if(active>0)
-{
-cur=shipblank;
-blaf++;
-if(blaf==MAXBLAF)
-{
-blaf=0;
+    int i;
+    for (i = 0; i < MAX_ENEMIES; i++) {
+        if (enemies[i].active && boxesCollide(enemies[i].x, enemies[i].y / SIN_SCALE, eWidth(i), eHeight(i), playerX, playerY, hWidth, hHeight)) {
+            isBlinking = 1;
+            enemies[i].active = 0;
+            enemies[i].explosionFrame = 0;
+            playerHealth -= enemyDamage[enemies[i].type];
+            if (playerHealth < 0) { playerHealth = 0; }
+        }
+    }
 }
-}
-else
+
+void drawPlayer()
 {
-cur=shipbs[shipframe];shipframe++;shipframe%=SHFRAMES;
-}
-}
-else
-{
-if((gen%FREQUENCY)<(SHBLFRAMES*PARAM))
-{
-cur=shipbl[shipblframe/PARAM];shipblframe++;shipblframe%=(SHBLFRAMES*PARAM);
-}
-else
-{
-cur=shipbs[shipframe];
-shipframe++;shipframe%=SHFRAMES;
-}
-}
-masked_blit(cur,dbuffer,0,0,shipx,shipy,cur->w,cur->h);
+    if (isBlinking > 0) {
+        if (playerHealth > 0) {
+            currentBmp = playerBlankBitmap;
+            isBlinking++;
+            if (isBlinking == maxBlinkActiveFrames) {
+                isBlinking = 0;
+            }
+        } else {
+            currentBmp = playerShipBitmaps[playerFrame];
+            playerFrame++;
+            playerFrame %= shipFrames;
+        }
+    } else {
+        if ((gs.frameCount % (unsigned)STAR_FREQUENCY) < (unsigned)(shipBlinkFrames * shipAnimSpeed)) {
+            currentBmp = playerBlinkBitmaps[playerBlinkFrame / shipAnimSpeed];
+            playerBlinkFrame++;
+            playerBlinkFrame %= (shipBlinkFrames * shipAnimSpeed);
+        } else {
+            currentBmp = playerShipBitmaps[playerFrame];
+            playerFrame++;
+            playerFrame %= shipFrames;
+        }
+    }
+    drawSprite(currentBmp, playerX, playerY);
 }
 
 #endif //_M_HERO_
+

@@ -28,122 +28,110 @@ by <font color="#bbddff" size="+1">Karthik Kumar Viswanathan</font>&nbsp;&amp; <
 <li><A href="#debug">Game Debugging</A>
 <li><A href="#themes">Themes</A>
 <li><A href="#sourcecode">Source Code</A>
-<li><A href="#us">Contact Us</A></li>
+<li><A href="#us">Contact Us</A>
+<li><A href="#links">Links</A></li>
 </ul>
 <p></p>
 <a name="welcome"></a>
 <h2>Welcome</h2>
 <p></p>
-Thank you for procuring this game : Hope you have as much
-fun playing it as we had making it .
+Thank you for procuring this game! Hope you have as much fun playing it as we had making it.
 <p></p>
 <a name="disclaimer"></a>
 <h2>Disclaimer</h2>
 <p></p>
 #include <font color="#ff0000">&lt;std_disclaimer.h&gt;</font>
 <p></p>
-<font color="#00dd00">"We do not accept responsibility for any effects ,adverse or otherwise ,
-that this source code and software may have on you ,your computer ,your sanity ,your dog ,and
-anything else that you can think of .Use it at your own risk ."</font>
+<font color="#00dd00">"We do not accept responsibility for any effects, adverse or otherwise, that this source code and software may have on you, your computer, your sanity, your dog, and anything else that you can think of. Use it at your own risk."</font>
 <p></p>
 <a name="copyrights"></a>
 <h2>Copyrights</h2>
 <p></p>
-Permission is granted to anyone to use and redistribute the source
-code for any purpose including commercial applications ,and to alter it and
-redistribute it freely <b>as long as</b> you don't claim it as yours or misrepresent
-its origin ;Altered source code must be clearly marked as such ,and must not be
-misrepresented as being the original source code .
+Permission is granted to anyone to use and redistribute the source code for any purpose including commercial applications, and to alter it and redistribute it freely <b>as long as</b> you don't claim it as yours or misrepresent its origin. Altered source code must be clearly marked as such, and must not be misrepresented as being the original source code.
 <p></p>
 <a name="gamenotes"></a>
 <h2>Game Notes</h2>
 <p></p>
-You are a Space Ship ,in a Space Shooter : press <b>Space</b> to shoot ;)
-Shoot anything that <b>isn't you</b> .And don't hit 'em or their bullets .
+You are a Space Ship, in a Space Shooter: press <b>Space</b> to shoot ;)
+Shoot anything that <b>isn't you</b>. And don't hit 'em or their bullets.
 <p></p>
 <a name="guns"></a>
 <h2>Guns</h2>
-<i>"Guns .Lots of 'em ."</i>
+<i>"Guns. Lots of 'em."</i>
 <p></p>
-You can use different types of bullets to fire .A short description of what's available :
+You can use different types of bullets to fire. A short description of what's available:
 <p></p>
 <h3>Gun <font color="#0000ff"><i>1</i></font></h3>
 <p></p>
-<b>Bullet</b> : Fire Fury
+<b>Bullet</b>: Fire Fury
 <br>
-<b>Description</b> : Infinite ammo .
+<b>Description</b>: Infinite ammo.
 <p></p>
 <h3>Gun <font color="#0000ff"><i>2</i></font></h3>
 <p></p>
-<b>Bullet</b> : Poison Pint
+<b>Bullet</b>: Poison Pint
 <br>
-<b>Description</b> : Full of Green Venom ,Jagged Fire ...
+<b>Description</b>: Full of Green Venom, Jagged Fire ...
 <p></p>
 <h3>Gun <font color="#0000ff"><i>3</i></font></h3>
 <p></p>
-<b>Bullet</b> : Lightning Lash
+<b>Bullet</b>: Lightning Lash
 <br>
-<b>Description</b> : Phew !That's fast !
+<b>Description</b>: Phew! That's fast!
 <p></p>
 <h3>Gun <font color="#0000ff"><i>4</i></font></h3>
 <p></p>
-<b>Bullet</b> : Icy Impulse
+<b>Bullet</b>: Icy Impulse
 <br>
-<b>Description</b> : Brrr .... Freezing cold ,fired in a V pattern .
+<b>Description</b>: Brrr... Freezing cold, fired in a V pattern.
 <p></p>
 <h3>Gun <font color="#0000ff"><i>5</i></font></h3>
 <p></p>
-<b>Bullet</b> : Vertical Ventura
+<b>Bullet</b>: Vertical Ventura
 <br>
-<b>Description</b> : Diamond ,Vertical fire : Clean Sweep the screen with it .
+<b>Description</b>: Diamond, Vertical fire: Clean Sweep the screen with it.
 <p></p>
 <h3>Gun <font color="#0000ff"><i>6</i></font></h3>
 <p></p>
-<b>Bullet</b> : Mega Mine
+<b>Bullet</b>: Mega Mine
 <br>
-<b>Description</b> : A blast .Place 'em and go away .
+<b>Description</b>: A blast. Place 'em and go away.
 <p></p>
 <a name="collectibles"></a>
 <h2>Collectibles</h2>
 <p></p>
-Collectibles are of two types : <b>Ammo</b> and <b>Others</b> .
+Collectibles are of two types: <b>Ammo</b> and <b>Others</b>.
 <p></p>
 <h3>Ammo</h3>
-Ammo is for guns .They add on for Guns other than 
-that for Fire Fury ,in which case the bullet power is boosted .
+Ammo is for guns. They add on for Guns other than that for Fire Fury, in which case the bullet power is boosted.
 <p></p>
 <h3>Others</h3>
 <p></p>
-Others give health ,lives and points .
+Others give health, lives and points.
 <p></p>
-All collectibles disappear after some time .
+All collectibles disappear after some time.
 <p></p>
 <a name="points"></a>
 <h2>Points</h2>
 <p></p>
-Points can be accumulated by killing enemies or picking up collectibles
-.Once you cross a number of points ,a life gets added .Once a new life
-gets added ,your points drop down to zero .This is done till you have
-the maximum number of lives ,after which you can accumulate as many points 
-as you like ,as long as you don't lose your life .
+Points can be accumulated by killing enemies or picking up collectibles. Once you cross a number of points, a life gets added. Once a new life gets added, your points drop down to zero. This is done till you have the maximum number of lives, after which you can accumulate as many points as you like, as long as you don't lose your life.
 <p></p>
 <a name="enemies"></a>
 <h2>Enemies</h2>
 <p></p>
-Enemies aren't spawned as such .Only certain types of enemies are allowed in a given level .One may usually expect the difficulty level to increase with level .
-Do not stand in their way if they can shoot .Use appropriate guns instead .
+Enemies aren't spawned as such. Only certain types of enemies are allowed in a given level. One may usually expect the difficulty level to increase with level. Do not stand in their way if they can shoot. Use appropriate guns instead.
 <p></p>
 <a name="ue"></a>
 <h2>User Experience</h2>
 <p></p>
-Running it is no big deal .It plays <i>_only_</i> with a keyboard as of now .
+Running it is no big deal. It plays <i>only</i> with a keyboard as of now.
 <p></p>
-These are the controls :
+These are the controls:
 <p></p>
 <h3>Generic Menus</h3>
 <p></p>
 <table bgcolor="#ffeebb" border="1">
-<font color="#444400"> 
+<font color="#444400">
 <thead>
   <TR><th>Keys</th><th>Function</th></TR></thead>
 <tbody>
@@ -154,6 +142,7 @@ These are the controls :
 <tr><td>Enter</td><td>Activate/Toggle Selection</td></tr>
 <tr><td>M</td><td>Toggle Music On/Off</td></tr>
 <tr><td>S</td><td>Toggle SFX On/Off</td></tr>
+<tr><td>T</td><td>Toggle Stats On/Off</td></tr>
 <tr><td>F12</td><td>Take a <b>PCX</b> snapshot</td></tr>
 <tr><td>Esc</td><td>Quit/To Previous Menu</td></tr>
 </tbody>
@@ -163,7 +152,7 @@ These are the controls :
 <h3>Game</h3>
 <p></p>
 <table bgcolor="#ffeebb" border="1">
-<font color="#444400"> 
+<font color="#444400">
 <thead>
   <TR><th>Keys</th><th>Function</th></TR></thead>
 <tbody>
@@ -198,55 +187,67 @@ These are the controls :
 <a name="debug"></a>
 <h2>Game Debugging</h2>
 <p></p>
-Look at the <font color="#ff0000">Game Log</font> if the game does not run properly .In case you aren't able to see anything in it ,report it to <A href="#us">us</A> .
+Look at the <font color="#ff0000">Game Log</font> if the game does not run properly (<b>GAMELOG.TXT</b>). It is written to your <b>user data directory</b> (see <A href="#themes">Themes</A>). In case you aren't able to see anything in it, report it to <A href="#us">us</A>.
 <p></p>
 <a name="themes"></a>
 <h2>Themes</h2>
 <p></p>
-Themes are to be written in a file having <b>.INI</b> extension .A batch file/shell script is to be provided ,passing the <b>.INI</b> filename as a command line argument
-to the executable .The game files are to be placed in the same directory as the executable .A sample theme ,<font color="#00ff00">GREEN</font>
-has been given .If you are interested in making themes ,contact <A href="#us">us</A> for the <b>specs</b> .
+Themes are to be written in a file having <b>.INI</b> extension. A batch file/shell script is to be provided, passing the <b>.INI</b> filename as a command line argument to the executable. The game files are to be placed in the same directory as the executable. A sample theme, <font color="#00ff00">GREEN</font>, has been given. If you are interested in making themes, contact <A href="#us">us</A> for the <b>specs</b>.
+<p></p>
+<h3>Data Directory Layout</h3>
+<p></p>
+The game uses three data directory concepts:
+<p></p>
+<ul>
+<li><b><code>dataDir</code></b>: The game's root directory (where <code>AB.EXE</code> is located). All game data assets (<code>DATA\</code>, <code>THEME\</code>) are resolved relative to this directory.</li>
+<li><b><code>themeDataDir</code></b>: The active theme directory, derived from the <code>.INI</code> path — e.g., <code>dataDir\THEME\GREEN\</code>.</li>
+<li><b><code>userDataDir</code></b>: The user-specific data directory, located at:
+<ul>
+<li>Windows: <code>%APPDATA%\AfterBurn\</code></li>
+<li>Linux: <code>$XDG_DATA_HOME/AfterBurn/</code> or <code>~/.AfterBurn/</code></li>
+<li>Fallback: same directory as the executable (DOS/9x)</li>
+</ul>
+</li>
+</ul>
+The following files are written to <code>userDataDir</code>:
+<ul>
+<li><b><code>GAMELOG.TXT</code></b> — game log (for debugging)</li>
+<li><b><code>DEFAULT.HSC</code></b> — high scores</li>
+<li><b><code>&lt;theme&gt;.PRF</code></b> — user preferences (e.g. <code>GREEN.PRF</code>)</li>
+</ul>
+Theme files (<code>.INI</code>, graphics, sounds, music) are always read-only and never overwritten.
+<p></p>
 <p></p>
 <a name="sourcecode"></a>
 <h2>Source Code</h2>
 <p></p>
-The source code (in <b>C</b>) for this game has been given .We believe in writing
-useful (?) free software .We hope you appreciate our efforts and respect
-<A href="#welcome"><font color="#ffff00">our feelings</font></A> and <A href="#copyrights"><font color="#ffff00">copyrights</font></A> for this game .
+The source code (in <b>C</b>) for this game has been given. We believe in writing useful (?) free software. We hope you appreciate our efforts and respect <A href="#welcome"><font color="#ffff00">our feelings</font></A> and <A href="#copyrights"><font color="#ffff00">copyrights</font></A> for this game.
 <p></p>
 <ul>
-<li>You should have these external libraries to make the program : 
-<font color="#00ffbb">Allegro</font> ,<font color="#00ffbb">JGMOD</font>/<font color="#00ffbb">DUMB (DUMBOGG)</font> and <font color="#00ffbb">Allegrofont</font> . 
-
-<li>The <font color="#00ffbb">DirextX SDK</font> is needed to compile the software for Windows .</li>
-
-<li><font color="#00ffbb">libogg</font> ,<font color="#00ffbb">libvorbis</font> and <font color="#00ffbb">libvobisfile</font> are needed for <font color="#00ffbb">DUMBOGG</font> support .</li>
-  
-<li><font color="#00ffbb">JGMOD</font> Support is still provided ,for a Psenti .It was used first .It can still be used now ,if the <font color="#00ffbb">DUMB</font> code fails for <b>DOS</b> .
-However ,loading of <b>IT</b> and <b>OGG</b> files may not be possible in <font color="#00ffbb">JGMOD</font> ,and that of <b>JGM</b> files in <font color="#00ffbb">DUMB</font> .
-  
-<li>Has been tested on <b>Windows</b> and <b>GNU/Linux</b> 
-  platforms . 
-  
-<li>You should have a compliant compiler such as <b>GCC</b> . 
-  
-<li><b>MIDI</b> isn't used in this distro .If you are keen on it ,you can see for yourself that the source is <b>MIDI</b> compatible . 
-  
-<li>For a list of what changes/fixes/improvements have been done
-to the code ,please read the <font color="#ff0000">LOG.TXT</font> in the source directory .
-</li>
+<li>You should have these external libraries to make the program: <font color="#00ffbb">Allegro</font>, <font color="#00ffbb">DUMB</font>, and <font color="#00ffbb">AllegroFont</font>.</li>
+<li>Ogg Vorbis playback support thanks to <font color="#00ffbb">Sven</font> (dumbogg).</li>
+<li>Has been tested on <b>Windows</b> and <b>GNU/Linux</b> platforms.</li>
+<li>You should have a compliant compiler such as <b>GCC</b>.</li>
+  <li><b>MIDI</b> isn't used in this distro. If you are keen on it, you can see for yourself that the source is <b>MIDI</b> compatible.</li>
+  <li>For a list of what changes/fixes/improvements have been done to the code, please read <A HREF="CHANGES.MD"><font color="#ff0000">CHANGES.MD</font></A>.
+  <li>For developer documentation (build, architecture, code conventions), see <A href="DEVELOP.MD"><font color="#ff0000">DEVELOP.MD</font></A>.</li>
+</ul>
+<p></p>
+<a name="links"></a>
+<h2>Links</h2>
+<p></p>
+<ul>
+	<li><b>License:</b> <A href="LICENSE.MD"><font color="#ff0000">LICENSE.MD</font></A> (MIT License)</li>
 </ul>
 <p></p>
 <a name="us"></a>
 <h2>Contact Us</h2>
 <p></p>
 <ol>
-<li>
-<font color="#bbddff" size="+1">Karthik Kumar Viswanathan</font> <A href="mailto:karthikkumar@gmail.com">e-mail</A>
-<li>
-<font color="#bbddff" size="+1">Nikhil Karnad</font> <A href="mailto:nikhil.karnad@gmail.com">e-mail</A>
-</li>
+<li><font color="#bbddff" size="+1">Karthik Kumar Viswanathan</font> <A href="mailto:karthikkumar@gmail.com">e-mail</A></li>
+<li><font color="#bbddff" size="+1">Nikhil Karnad</font> <A href="mailto:nikhil.karnad@gmail.com">e-mail</A></li>
 </ol>
-</font> 
+<p></p>
+</font>
 </body>
 </html>

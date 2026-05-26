@@ -1,34 +1,64 @@
-@REM Requires Linking of Allegro, AlFont and DUMB.
 @ECHO OFF
-
-REM UPX Compression
-SET UPX_EXE=upx
-SET UPX_FLAGS=--best --nrv2e --strip-relocs=0 --overlay=strip
-
-REM Use MinGW
-SET CC=gcc
-SET RC=windres
-SET LD=gcc
+IF NOT DEFINED EXTDEV ECHO ERROR: EXTDEV environment variable not set. && EXIT /B 1
+SET APP=%~dp0
+CD /D "%APP%"
+SET MINGDIR=%EXTDEV%\MinGW32
 SET DEFINES=-DDEL -DADEL -DDUMB
-SET CFLAGS=-O2 -Wall -fomit-frame-pointer
-SET CLFLAGS=-static -static-libgcc -static-libstdc++ -m32 -mwindows
-SET LIBS=-lalfont -laldmb -ldumb -lalleg
+SET CFLAGS=-Wall -Wextra -Wno-unused-parameter -m32 -I"%EXTDEV%\Allegro-MSVC8-MinGW-BCC\Include" -I"%EXTDEV%\AlFont-MSVC-MinGW\Include" -I"%EXTDEV%\Dumb-MSVC9-MinGW\Include"
+SET CLFLAGS=-static -static-libgcc -m32 -mwindows
+SET LIBS=-L"%EXTDEV%\Allegro-MSVC8-MinGW-BCC\Lib\MinGW\x86" -L"%EXTDEV%\AlFont-MSVC-MinGW\Lib\MinGW\x86" -L"%EXTDEV%\Dumb-MSVC9-MinGW\Lib\MinGW\x86"
+SET LDFLAGS=-lalfont -laldmb -ldumb -lalleg
+SET GCC="%MINGDIR%\Bin\Gcc"
+SET WINDRES="%MINGDIR%\Bin\WindRes"
+SET GDB="%MINGDIR%\Bin\Gdb"
+SET UPXE="%EXTDEV%\UPX-5.0.1-Win32\upx.exe"
 
-MKDIR OBJ
-CD OBJ
+IF NOT "%DEBUG%"=="1" GOTO :CFLAGSREL
+SET CFLAGS=%CFLAGS% -O0 -g -DDEBUG=1
+GOTO :CFLAGSDONE
+:CFLAGSREL
+SET CFLAGS=%CFLAGS% -O1 -Wall
+:CFLAGSDONE
 
-ECHO Resource Compiling ...
-%RC% ..\RC\MAIN.RC -o MAINICON.OBJ
+MKDIR OBJ 2>NUL
 
-ECHO Compiling ...
-%CC% %CFLAGS% %CLFLAGS% %DEFINES% -c ..\SOURCE\MAIN.C -o MAIN.OBJ
+ECHO Resource Compiling...
+%WINDRES% RC\MAIN.RC -o OBJ\MAINICON.OBJ
 
-CD..
+ECHO Compiling...
+%GCC% %CFLAGS% %CLFLAGS% %DEFINES% -c SOURCE\MAIN.C -o OBJ\MAIN.OBJ
 
-ECHO Linking ...
-%LD% %CLFLAGS% -o AB.EXE OBJ\*.* %LIBS%
+ECHO Linking...
+%GCC% %CLFLAGS% -o AB.EXE OBJ\*.OBJ %LIBS% %LDFLAGS%
 
-ECHO UPX Compression ...
-%UPX_EXE% %UPX_FLAGS% AB.EXE
+COPY "%EXTDEV%\Allegro-MSVC8-MinGW-BCC\Bin\x86\alleg42.dll" ALLEG42.DLL >NUL
+
+ECHO Testing UPX...
+IF "%DEBUG%"=="1" GOTO :NOUPX
+%UPXE% --best AB.EXE >NUL 2>NUL
+%UPXE% --best ALLEG42.DLL >NUL 2>NUL
+IF NOT ERRORLEVEL 1 GOTO :UPXOK
+ECHO UPX not found or compression failed - skipping.
+GOTO :UPXDONE
+:UPXOK
+ECHO UPX compression done.
+GOTO :UPXDONE
+:NOUPX
+ECHO UPX compression skipped (debug build).
+:UPXDONE
 
 ECHO Build Finished.
+IF NOT EXIST AB.EXE EXIT /B 1
+ECHO SUCCESS: AB.EXE built. Run a theme BAT file to launch.
+VER>NUL
+
+IF NOT DEFINED P7ZIP_HOME GOTO :NODIST
+MKDIR DIST 2>NUL
+FOR /F "tokens=3 delims= " %%A IN ('FIND "VProductVersion" SOURCE\VER.H') DO SET VERTMP=%%A
+CALL SET VER=%%VERTMP:"=%%
+SET DZIP=AB_%VER:.=_%
+IF "%DEBUG%"=="1" SET DZIP=AB_D_%VER:.=_%
+IF EXIST "DIST\%DZIP%.ZIP" DEL "DIST\%DZIP%.ZIP"
+"%P7ZIP_HOME%\7z.exe" a -tzip "DIST\%DZIP%.ZIP" AB.EXE ALLEG42.DLL DATA\ THEME\ README.MD README.HTM LICENSE.MD GREEN.BAT TAMIL.BAT >NUL
+ECHO Dist package: DIST\%DZIP%.ZIP
+:NODIST

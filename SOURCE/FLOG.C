@@ -1,24 +1,29 @@
-//File Logging .
-
 #ifndef _M_FLOG_
 #define _M_FLOG_
 
+#include <stdarg.h>
 #include "decl.h"
 #include "files.h"
 
-void loginit()
+void logInit()
 {
-logfp = fopen(FLog,"w");
+    logFile = fileOpen(getUserDataPath("GAMELOG.TXT"), "w");
 }
 
-void logwrite()
+void logWrite(const char* format, ...)
 {
-if(logfp){fprintf(logfp,"%s\n",logmsg);}
+    if (!logFile) { return; }
+    va_list args;
+    va_start(args, format);
+    vfprintf(logFile, format, args);
+    va_end(args);
+    fputc('\n', logFile);
+    fflush(logFile);
 }
 
-void logclose()
+void logClose()
 {
-if(logfp) {fclose(logfp);}
+    if (logFile) { fclose(logFile); logFile = NULL; }
 }
 
-#endif //_M_FLOG
+#endif

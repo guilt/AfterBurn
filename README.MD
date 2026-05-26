@@ -16,6 +16,7 @@ by **Karthik Kumar Viswanathan** & **Nikhil Karnad**
 - [Themes](#themes)
 - [Source Code](#source-code)
 - [Contact Us](#contact-us)
+- [Links](#links)
 
 ---
 
@@ -149,26 +150,43 @@ These are the controls:
 ---
 
 ## Game Debugging
-Look at the **Game Log** if the game does not run properly. In case you aren't able to see anything in it, report it to [us](#contact-us).
+Look at the **Game Log** (`GAMELOG.TXT`) if the game does not run properly. It is written to your **user data directory** (see [Themes](#themes)). In case you aren't able to see anything in it, report it to [us](#contact-us).
 
 ---
 
 ## Themes
 Themes are to be written in a file having `.INI` extension. A batch file/shell script is to be provided, passing the `.INI` filename as a command line argument to the executable. The game files are to be placed in the same directory as the executable. A sample theme, **GREEN**, has been given. If you are interested in making themes, contact [us](#contact-us) for the **specs**.
 
+### Data Directory Layout
+
+The game uses three data directory concepts:
+
+- **`dataDir`**: The game's root directory (where `AB.EXE` is located). All game data assets (`DATA\`, `THEME\`) are resolved relative to this directory.
+- **`themeDataDir`**: The active theme directory, derived from the `.INI` path — e.g., `dataDir\THEME\GREEN\`.
+- **`userDataDir`**: The user-specific data directory, located at:
+  - Windows: `%APPDATA%\AfterBurn\`
+  - Linux: `$XDG_DATA_HOME/AfterBurn/` or `~/.AfterBurn/`
+  - Fallback: same directory as the executable (DOS/9x)
+
+The following files are written to `userDataDir`:
+- **`GAMELOG.TXT`** — game log (for debugging)
+- **`DEFAULT.HSC`** — high scores
+- **`<theme>.PRF`** — user preferences (e.g. `GREEN.PRF`)
+
+Theme files (`.INI`, graphics, sounds, music) are always read-only and never overwritten.
+
 ---
 
 ## Source Code
 The source code (in **C**) for this game has been given. We believe in writing useful (?) free software. We hope you appreciate our efforts and respect [our feelings](#welcome) and [copyrights](#copyrights) for this game.
 
-- You should have these external libraries to make the program: **Allegro**, **JGMOD**/**DUMB (DUMBOGG)**, and **Allegrofont**.
-- The **DirextX SDK** is needed to compile the software for Windows.
-- **libogg**, **libvorbis**, and **libvobisfile** are needed for **DUMBOGG** support.
-- **JGMOD** support is still provided, for a Psenti. It was used first. It can still be used now, if the **DUMB** code fails for **DOS**. However, loading of **IT** and **OGG** files may not be possible in **JGMOD**, and that of **JGM** files in **DUMB**.
+- You should have these external libraries to make the program: **Allegro**, **DUMB**, and **Allegrofont**.
+- Ogg Vorbis playback support thanks to **Sven** (dumbogg).
 - Has been tested on **Windows** and **GNU/Linux** platforms.
 - You should have a compliant compiler such as **GCC**.
 - **MIDI** isn't used in this distro. If you are keen on it, you can see for yourself that the source is **MIDI** compatible.
-- For a list of what changes/fixes/improvements have been done to the code, please read the **LOG.TXT** in the source directory.
+- For a list of what changes/fixes/improvements have been done to the code, please read [CHANGES.MD](CHANGES.MD).
+- For developer documentation (build, architecture, code conventions), see [DEVELOP.MD](DEVELOP.MD).
 
 ---
 
@@ -177,5 +195,5 @@ The source code (in **C**) for this game has been given. We believe in writing u
 2. **Nikhil Karnad** ([e-mail](mailto:nikhil.karnad@gmail.com))
 
 ---
-# License
-This project is licensed under the **MIT License** - see the [LICENSE.MD](LICENSE.MD) file for details.
+# Links
+- **License:** [LICENSE.MD](LICENSE.MD) (MIT License)
